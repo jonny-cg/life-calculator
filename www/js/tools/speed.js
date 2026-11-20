@@ -41,6 +41,12 @@
       });
     });
     row.seconds = () => (t.h || 0) * 3600 + (t.m || 0) * 60 + (t.s || 0);
+    row.setSeconds = sec => {
+      sec = Math.round(sec || 0);
+      t.h = Math.floor(sec / 3600); t.m = Math.floor(sec % 3600 / 60); t.s = sec % 60;
+      st[key] = t;
+      row.querySelectorAll('input').forEach(inp => { inp.value = sec ? String(t[inp.dataset.k]) : ''; });
+    };
     return row;
   };
   function hms(sec) {
@@ -60,72 +66,69 @@
     info: info,
     render(page) {
       const st = ui.toolState('speed', { value: 100, unit: 'kmh' });
-      const pst = ui.toolState('pace2', { mode: 'record', kmh: 10, dist: 10, time: { h: 0, m: 55, s: 0 } });
+      const pst = ui.toolState('dts', { dist: 10, time: { h: 0, m: 55, s: 0 }, kmh: '', order: ['dist', 'time'] });
       LC.buildConverter(page, { units: F.SPEED_UNITS, state: st });
 
-      page.appendChild(ui.el('<div class="section-title big">거리 · 시간 · 속도 계산</div>'));
-      page.appendChild(ui.segmented([
-        { value: 'record', label: '거리·시간 → 속도' },
-        { value: 'time', label: '속도·거리 → 시간' }
-      ], pst.mode, v => { pst.mode = v; pst.save(); draw(); }, 'wide'));
-      const box = ui.el('<div></div>');
-      page.appendChild(box);
+      page.appendChild(ui.el('<div class="section-head" style="margin-top:28px"><span style="font-size:20px;font-weight:700;color:var(--text)">거리 · 시간 · 속도</span><button type="button" class="link-btn" data-reset>초기화</button></div>'));
+      page.appendChild(ui.el('<p class="footnote" style="margin:-2px 4px 10px">두 가지를 입력하면 나머지 하나가 <b style="color:var(--accent)">자동 계산</b>됩니다.</p>'));
+
+      const distRow = ui.numberRow({ label: '거리', unit: 'km', value: pst.dist, decimals: 4, maxDigits: 5, onChange: v => { pst.dist = v; touch('dist'); } });
+      const chips = ui.chips(DIST_CHIPS, v => { pst.dist = v; distRow.input.setNumber(v); touch('dist'); });
+      const timeRow = LC.timeRow('시간', pst, 'time', () => touch('time'));
+      const speedRow = ui.numberRow({ label: '속도', unit: 'km/h', value: pst.kmh, decimals: 2, maxDigits: 6, onChange: v => { pst.kmh = v; touch('kmh'); } });
+      const g = ui.group([distRow]); g.appendChild(chips); g.appendChild(timeRow); g.appendChild(speedRow);
+      page.appendChild(g);
+      const res = ui.el('<div class="result-card"></div>');
+      page.appendChild(res);
       page.appendChild(ui.infoBanner('걷기·달리기·KTX 등 속도 참고표', info));
 
-      function draw() {
-        box.innerHTML = '';
-        const res = ui.el('<div class="result-card"></div>');
-        const distRow = ui.numberRow({ label: '거리', unit: 'km', value: pst.dist, decimals: 4, maxDigits: 5, onChange: v => { pst.dist = v; pst.save(); calc(); } });
-        const chips = ui.chips(DIST_CHIPS, v => { pst.dist = v; pst.save(); distRow.input.setNumber(v); calc(); });
-        let timeRow = null;
-        if (pst.mode === 'record') {
-          timeRow = LC.timeRow('걸린 시간', pst, 'time', calc);
-          const g = ui.group([distRow]); g.appendChild(chips); g.appendChild(timeRow);
-          box.appendChild(g);
-          box.appendChild(ui.el('<p class="footnote">예) 10km를 55분에 뛰었다 → 거리 10km, 걸린 시간 0시간 55분 0초</p>'));
-        } else {
-          const g = ui.group([ui.numberRow({ label: '시속', unit: 'km/h', value: pst.kmh, decimals: 2, maxDigits: 6, onChange: v => { pst.kmh = v; pst.save(); calc(); } }), distRow]);
-          g.appendChild(chips);
-          box.appendChild(g);
-        }
-        box.appendChild(res);
+      const rows = { dist: distRow, time: timeRow, kmh: speedRow };
+      Object.keys(rows).forEach(k => rows[k].querySelector('.row-label').insertAdjacentHTML('beforeend', '<span class="auto-badge">자동</span>'));
 
-        function calc() {
-          const d = F.parseNum(pst.dist);
-          if (!(d > 0)) { res.innerHTML = '<div class="result-empty">거리를 입력하세요</div>'; return; }
-          if (pst.mode === 'record') {
-            const sec = timeRow.seconds();
-            if (!(sec > 0)) { res.innerHTML = '<div class="result-empty">걸린 시간을 입력하세요</div>'; return; }
-            const kmh = d / (sec / 3600), p = sec / d;
-            res.innerHTML = '<div class="result-label">' + F.fmt(d, 3) + 'km를 ' + hms(sec) + '에 이동</div>' +
-              '<div class="result-main">시속 ' + F.fmt(kmh, 2) + '<span class="u">km/h</span></div>' +
-              '<div class="result-sub">1km 평균 ' + pace(p) + ' (페이스)</div>' +
-              ui.resultRows([
-                { label: '1km 페이스', value: pace(p) + ' /km', cls: 'accent' },
-                { label: '100m 평균', value: hms(p / 10) },
-                { label: '초속 · 마일', value: F.fmt(kmh / 3.6, 2) + ' m/s · ' + F.fmt(kmh / 1.609344, 2) + ' mph' },
-                { label: '같은 속도로 5km', value: hms(p * 5) },
-                { label: '같은 속도로 10km', value: hms(p * 10) },
-                { label: '같은 속도로 하프', value: hms(p * 21.0975) },
-                { label: '같은 속도로 풀코스', value: hms(p * 42.195) }
-              ]);
-          } else {
-            const k = F.parseNum(pst.kmh);
-            if (!(k > 0)) { res.innerHTML = '<div class="result-empty">시속을 입력하세요</div>'; return; }
-            const sec = d / k * 3600;
-            res.innerHTML = '<div class="result-label">시속 ' + F.fmt(k, 2) + 'km로 ' + F.fmt(d, 3) + 'km 이동</div>' +
-              '<div class="result-main" style="font-size:30px">' + hms(sec) + '</div>' +
-              '<div class="result-sub">약 ' + F.fmt(sec / 3600, 2) + '시간 · ' + F.fmt(sec / 60, 1) + '분</div>' +
-              ui.resultRows([
-                { label: '1km 페이스', value: pace(3600 / k) + ' /km', cls: 'accent' },
-                { label: '100m 이동', value: hms(360 / k) },
-                { label: '1시간 동안 이동', value: F.fmt(k, 2) + ' km' }
-              ]);
-          }
-        }
-        calc();
+      // 마지막으로 입력한 두 값으로 나머지 하나를 계산
+      function touch(key) {
+        pst.order = [key].concat(pst.order.filter(k => k !== key)).slice(0, 2);
+        pst.save(); calc();
       }
-      draw();
+      page.querySelector('[data-reset]').onclick = () => {
+        pst.dist = ''; pst.kmh = ''; pst.time = { h: 0, m: 0, s: 0 }; pst.order = ['dist', 'time']; pst.save();
+        distRow.input.setNumber(''); speedRow.input.setNumber(''); timeRow.setSeconds(0); calc();
+      };
+
+      function calc() {
+        const target = ['dist', 'time', 'kmh'].find(k => !pst.order.includes(k));
+        Object.keys(rows).forEach(k => rows[k].classList.toggle('auto', k === target));
+        let d = F.parseNum(pst.dist), sec = timeRow.seconds(), k = F.parseNum(pst.kmh);
+        if (target === 'kmh') { k = d > 0 && sec > 0 ? d / (sec / 3600) : NaN; pst.kmh = isFinite(k) ? F.fix(Math.round(k * 100) / 100) : ''; speedRow.input.setNumber(pst.kmh); }
+        if (target === 'dist') { d = k > 0 && sec > 0 ? k * sec / 3600 : NaN; pst.dist = isFinite(d) ? F.fix(Math.round(d * 1000) / 1000) : ''; distRow.input.setNumber(pst.dist); }
+        if (target === 'time') { sec = d > 0 && k > 0 ? d / k * 3600 : NaN; timeRow.setSeconds(isFinite(sec) ? sec : 0); }
+        pst.save();
+        if (!(d > 0 && sec > 0 && k > 0)) {
+          res.innerHTML = '<div class="result-empty">' + { kmh: '거리와 시간을', dist: '속도와 시간을', time: '거리와 속도를' }[target] + ' 입력하세요</div>';
+          return;
+        }
+        const p = sec / d; // 1km 당 초
+        const head = {
+          kmh: { l: F.fmt(d, 3) + 'km를 ' + hms(sec) + '에 이동하면', v: '시속 ' + F.fmt(k, 2) + '<span class="u">km/h</span>' },
+          dist: { l: '시속 ' + F.fmt(k, 2) + 'km로 ' + hms(sec) + ' 동안', v: F.fmt(d, 2) + '<span class="u">km</span>' },
+          time: { l: '시속 ' + F.fmt(k, 2) + 'km로 ' + F.fmt(d, 3) + 'km 이동', v: hms(sec) }
+        }[target];
+        res.innerHTML = '<div class="result-label">' + head.l + '</div>' +
+          '<div class="result-main"' + (target === 'time' ? ' style="font-size:30px"' : '') + '>' + head.v + '</div>' +
+          '<div class="quote-stats" style="margin-top:14px">' +
+          '<div>1km 페이스<b>' + pace(p) + '</b></div>' +
+          '<div>100m<b>' + hms(p / 10) + '</b></div>' +
+          '<div>초속<b>' + F.fmt(k / 3.6, 2) + ' m/s</b></div></div>' +
+          '<div class="section-title" style="margin:16px 0 0">같은 속도라면</div>' +
+          ui.resultRows([
+            { label: '5km', value: hms(p * 5) },
+            { label: '10km', value: hms(p * 10) },
+            { label: '하프 (21.1km)', value: hms(p * 21.0975) },
+            { label: '풀코스 (42.195km)', value: hms(p * 42.195) },
+            { label: '1시간 동안', value: F.fmt(k, 2) + ' km' }
+          ]).replace('result-rows', 'result-rows" style="margin-top:4px;border-top:0');
+      }
+      calc();
     }
   });
 })();

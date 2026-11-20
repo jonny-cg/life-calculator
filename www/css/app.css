@@ -626,8 +626,10 @@ a { color: inherit; text-decoration: none; }
 .chip .chip-unit { font-size: 10.5px; font-weight: 500; opacity: .6; margin-left: 4px; }
 .chip.on .chip-unit { opacity: .85; }
 .time-fields { display: flex; align-items: center; gap: 4px; flex: 1; justify-content: flex-end; }
-.time-fields input { width: 44px; flex: none; border: 0; outline: 0; background: var(--fill); border-radius: 8px; text-align: center; font-size: 17px; font-weight: 600; padding: 6px 2px; font-variant-numeric: tabular-nums; }
-.time-fields span { font-size: 14px; color: var(--text-2); margin-right: 4px; }
+.time-fields input { width: 42px; flex: none; border: 0; outline: 0; background: var(--fill); border-radius: 8px; text-align: center; font-size: 17px; font-weight: 600; padding: 6px 2px; font-variant-numeric: tabular-nums; }
+.time-fields span { font-size: 13px; color: var(--text-2); margin-right: 2px; white-space: nowrap; }
+.row-label { white-space: nowrap; }
+.row-label small { white-space: normal; }
 .cur-btn { display: inline-flex; align-items: center; gap: 6px; flex: none; max-width: 58%; background: var(--fill); border-radius: 8px; padding: 6px 10px; font-size: 15px; font-weight: 600; text-align: left; }
 .cur-btn .cn { font-weight: 500; font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cur-btn svg { width: 12px; height: 12px; flex: none; color: var(--text-2); transform: rotate(90deg); }
@@ -643,3 +645,19 @@ a { color: inherit; text-decoration: none; }
 .act-val { text-align: right; }
 .act-val b { font-size: 17px; font-variant-numeric: tabular-nums; }
 .act-val small { display: block; font-size: 11.5px; color: var(--text-2); }
+.auto-badge { display: none; font-size: 10.5px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 5px; padding: 1px 5px; margin-left: 6px; vertical-align: 2px; }
+.row.auto .auto-badge { display: inline-block; }
+.row.auto { background: var(--accent-soft); }
+.row.auto input { color: var(--accent); font-weight: 700; }
+.row.auto .row-label { color: var(--accent); font-weight: 600; }
+.check-row { cursor: pointer; }
+.check-row input { appearance: none; -webkit-appearance: none; width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--text-3); margin: 0; flex: none; display: grid; place-items: center; cursor: pointer; transition: background .15s, border-color .15s; }
+.check-row input:checked { background: var(--accent); border-color: var(--accent); }
+.check-row input:checked::after { content: ""; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: translateY(-1px) rotate(45deg); }
+.food-cart { padding: 4px 16px 12px; }
+.food-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 12px; background: var(--accent-soft); border-radius: 10px; margin-top: 6px; font-size: 15px; }
+.food-item b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.food-item .row-del { width: 24px; height: 24px; }
+.food-total { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-2); margin-top: 8px; padding: 0 2px; }
+.food-total b { color: var(--text); }
+.chip.add { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
