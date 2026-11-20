@@ -11,3 +11,5 @@ func openWindow(url, dir string) bool {
 }
 
 func showError(msg string) { fmt.Println("error:", msg) }
+
+func openDefaultBrowser(url string) { fmt.Println("default:", url) }

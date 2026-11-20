@@ -6,6 +6,6 @@ xcopy /e /i /q ..\www www >nul
 set GOOS=windows
 set GOARCH=amd64
 set CGO_ENABLED=0
-go build -trimpath -ldflags "-H windowsgui -s -w" -o ..\dist\LifeCalculator.exe .
+go build -trimpath -ldflags "-H windowsgui" -o ..\dist\LifeCalculator.exe .
 rmdir /s /q www
 echo built: dist\LifeCalculator.exe

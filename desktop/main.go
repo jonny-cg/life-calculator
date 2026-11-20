@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -133,10 +134,22 @@ func dataDir() string {
 	return d
 }
 
+func setupLog() {
+	f, err := os.OpenFile(filepath.Join(dataDir(), "log.txt"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+	if err == nil {
+		log.SetOutput(f)
+	}
+	log.SetFlags(log.LstdFlags)
+}
+
 func main() {
+	setupLog()
+	log.Println("start", os.Args[0])
+
 	// 이미 실행 중이면 창만 다시 연다
 	for p := basePort; p < basePort+5; p++ {
 		if alreadyRunning(p) {
+			log.Println("already running on", p)
 			openWindow(fmt.Sprintf("http://127.0.0.1:%d/", p), dataDir())
 			return
 		}
@@ -148,27 +161,52 @@ func main() {
 		if ln, err = net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", p)); err == nil {
 			break
 		}
+		log.Println("listen failed", p, err)
 	}
 	if ln == nil {
-		showError("로컬 서버를 시작할 수 없습니다: " + err.Error())
+		showError("로컬 서버를 시작할 수 없습니다.\n" + err.Error())
 		return
 	}
 	addr := ln.Addr().(*net.TCPAddr)
 	appURL := fmt.Sprintf("http://127.0.0.1:%d/", addr.Port)
-	go http.Serve(ln, newServer())
-
-	lastPing.Store(time.Now().Unix())
-	// 화면에서 생존 신호(20초 간격)가 3분 넘게 끊기면 종료 (창을 닫은 경우 등)
+	log.Println("serving", appURL)
 	go func() {
+		if err := http.Serve(ln, newServer()); err != nil {
+			log.Println("serve error", err)
+		}
+	}()
+
+	lastPing.Store(0)
+	started := time.Now()
+	// 감시: 화면이 20초 안에 뜨지 않으면 기본 브라우저로 다시 열기,
+	// 화면에서 생존 신호(20초 간격)가 3분 넘게 끊기면 종료
+	go func() {
+		fallbackDone := false
 		for {
-			time.Sleep(15 * time.Second)
-			if time.Now().Unix()-lastPing.Load() > 180 {
+			time.Sleep(2 * time.Second)
+			lp := lastPing.Load()
+			if lp == 0 {
+				if !fallbackDone && time.Since(started) > 20*time.Second {
+					fallbackDone = true
+					log.Println("no ping after 20s -> default browser")
+					openDefaultBrowser(appURL)
+				}
+				if time.Since(started) > 3*time.Minute {
+					log.Println("never connected, exit")
+					showError("앱 화면을 열지 못했습니다.\n\n브라우저에서 아래 주소를 직접 열어 보세요:\n" + appURL + "\n\n로그: " + filepath.Join(dataDir(), "log.txt"))
+					os.Exit(1)
+				}
+				continue
+			}
+			if time.Now().Unix()-lp > 180 {
+				log.Println("heartbeat lost, exit")
 				os.Exit(0)
 			}
 		}
 	}()
-	if openWindow(appURL, dataDir()) {
+	if openWindow(appURL, dataDir()) && lastPing.Load() != 0 {
+		log.Println("window closed, exit")
 		return // 앱 창(Edge 앱 모드)이 닫힘 → 종료
 	}
-	select {} // 생존 신호 감시에 맡김
+	select {} // 감시에 맡김
 }

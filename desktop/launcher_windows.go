@@ -3,6 +3,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -43,15 +44,26 @@ func openWindow(url, dir string) bool {
 		)
 		start := time.Now()
 		if err := cmd.Start(); err != nil {
+			log.Println("browser start failed", exe, err)
 			continue
 		}
-		cmd.Wait()
+		log.Println("browser started", exe)
+		err := cmd.Wait()
+		log.Println("browser exited after", time.Since(start), err)
 		// 바로 끝났다면 이미 떠 있는 창에 넘겨준 것 → 생존 신호 방식으로 대기
 		return time.Since(start) > 4*time.Second
 	}
 	// Edge/Chrome 이 없으면 기본 브라우저로 열기
-	exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	log.Println("no Edge/Chrome found")
+	openDefaultBrowser(url)
 	return false
+}
+
+func openDefaultBrowser(url string) {
+	if err := exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start(); err != nil {
+		log.Println("default browser failed", err)
+		exec.Command("cmd", "/c", "start", "", url).Start()
+	}
 }
 
 func showError(msg string) {
