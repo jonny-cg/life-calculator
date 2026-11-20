@@ -13,7 +13,7 @@
 
     const unitChips = ui.el('<div class="chips" style="padding-top:10px"></div>');
     o.units.forEach(u => {
-      const b = ui.el('<button class="chip" data-u="' + u.id + '">' + ui.esc(u.name) + '<small class="chip-unit">' + ui.esc(u.sym) + '</small></button>');
+      const b = ui.el('<button class="chip" data-u="' + u.id + '">' + ui.esc(u.name) + (u.sym !== u.name ? '<small class="chip-unit">' + ui.esc(u.sym) + '</small>' : '') + '</button>');
       b.onclick = () => { st.unit = u.id; st.save(); update(); };
       unitChips.appendChild(b);
     });
