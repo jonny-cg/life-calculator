@@ -46,6 +46,7 @@
       page.appendChild(ui.el('<div class="section-title">은 시세</div>'));
       const silver = ui.el('<div class="group"></div>');
       page.appendChild(silver);
+      page.appendChild(ui.el('<p class="est-note">금·은 가격은 국제 시세를 환율로 환산한 참고값이며, 실제 매매 가격과 다릅니다.</p>'));
       page.appendChild(ui.el('<p class="footnote">국제 금·은 시세(하루 1회 갱신)를 원/달러 환율로 환산한 값입니다. 국내 금거래소·금은방 가격은 부가세, 세공비, 매입·매도 수수료에 따라 다릅니다. 18K·14K는 순금 함량 기준 이론가입니다.</p>'));
 
       const vat = () => st.vat ? 1.1 : 1;

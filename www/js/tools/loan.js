@@ -69,6 +69,7 @@
 
       const res = ui.el('<div class="result-card"></div>');
       page.appendChild(res);
+      page.appendChild(ui.el('<p class="est-note">고정금리·월 단위로 계산한 예상 금액입니다. 실제 상환액은 금리 변동, 일할 계산, 중도상환 수수료 등에 따라 달라질 수 있습니다.</p>'));
       const btn = ui.el('<button class="btn secondary mt16">월별 상환 스케줄 보기</button>');
       page.appendChild(btn);
       let last = null;

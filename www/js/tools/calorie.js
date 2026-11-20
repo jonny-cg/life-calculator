@@ -38,11 +38,12 @@
     return 10 * w + 6.25 * h - 5 * a + (p.sex === 'm' ? 5 : -161);
   }
   // 분당 소모 칼로리
-  //  - 기초대사량 반영: 내 기초대사량을 1 MET 로 보고, 가만히 있어도 쓰는 몫(1 MET)을 뺀 '운동으로 추가로 쓴' 칼로리
-  //  - 미반영: 표준 공식 MET × 3.5 × 체중 ÷ 200 (가만히 있을 때 소모분 포함)
+  //  - 기초대사량 반영: 운동하는 동안 몸이 쓰는 전체 칼로리 = 운동 소모 + 기초대사 소모
+  //                     내 기초대사량(성별·나이·키·체중)을 1 MET 로 보고 MET × 기초대사량 ÷ 1440
+  //  - 미반영: 기초대사 몫(1 MET)을 뺀 순수 운동 소모 = (MET − 1) × 3.5 × 체중 ÷ 200
   function perMinFor(met, p) {
-    if (p.useBmr) { const b = bmr(p); return (met - 1) * b / 1440; }
-    return met * 3.5 * F.parseNum(p.weight) / 200;
+    if (p.useBmr) return met * bmr(p) / 1440;
+    return (met - 1) * 3.5 * F.parseNum(p.weight) / 200;
   }
   function dur(min) {
     if (!isFinite(min)) return '-';
@@ -55,8 +56,8 @@
     ui.sheet({
       title: '칼로리 계산 기준', content:
         '<div class="group">' +
-        '<div class="row"><span class="row-value" style="text-align:left;color:var(--text);line-height:1.6"><b>기초대사량 반영 (체크)</b><br/>기초대사량(Mifflin-St Jeor 공식) = 10×체중 + 6.25×키 − 5×나이 + 5(남) / −161(여)<br/>운동 소모 = (MET − 1) × 기초대사량 ÷ 1440 × 분<br/><small class="muted">성별·나이·키를 반영하고, 가만히 있어도 쓰는 기초대사 칼로리를 뺀 "운동으로 더 쓴" 칼로리입니다. 같은 칼로리를 태우는 데 필요한 시간이 조금 더 길게 나옵니다.</small></span></div>' +
-        '<div class="row"><span class="row-value" style="text-align:left;color:var(--text);line-height:1.6"><b>기초대사량 미반영 (체크 해제)</b><br/>소모 칼로리(kcal/분) = MET × 3.5 × 체중(kg) ÷ 200<br/><small class="muted">체중만 반영하는 일반적인 공식이며, 운동하는 동안의 기초대사 소모분도 포함됩니다.</small></span></div>' +
+        '<div class="row"><span class="row-value" style="text-align:left;color:var(--text);line-height:1.6"><b>기초대사량 반영 (체크)</b><br/>기초대사량(Mifflin-St Jeor 공식) = 10×체중 + 6.25×키 − 5×나이 + 5(남) / −161(여)<br/>소모 칼로리 = MET × 기초대사량 ÷ 1440 × 분<br/><small class="muted">운동하는 동안 가만히 있어도 쓰이는 기초대사 칼로리까지 함께 계산합니다. 성별·나이·키가 반영되며, 같은 칼로리를 태우는 시간이 더 짧게 나옵니다.</small></span></div>' +
+        '<div class="row"><span class="row-value" style="text-align:left;color:var(--text);line-height:1.6"><b>기초대사량 미반영 (체크 해제)</b><br/>소모 칼로리 = (MET − 1) × 3.5 × 체중(kg) ÷ 200 × 분<br/><small class="muted">기초대사 몫을 빼고 운동만으로 태우는 칼로리입니다. 체중만 반영하며, 필요한 운동 시간이 더 길게 나옵니다.</small></span></div>' +
         '</div><p class="footnote">MET(대사당량)은 가만히 앉아 있을 때를 1로 본 운동 강도입니다.</p>' +
         '<div class="section-title">운동별 MET</div><div class="table-wrap"><table class="table"><thead><tr><th>운동</th><th>강도</th><th>MET</th></tr></thead><tbody>' +
         ACTS.map(a => '<tr><td>' + a.e + ' ' + a.n + '</td><td style="color:var(--text-2)">' + a.d + '</td><td class="em">' + a.met + '</td></tr>').join('') +
@@ -79,7 +80,7 @@
       function profileGroup(onChange) {
         const g = ui.el('<div></div>');
         g.appendChild(ui.el('<div class="section-title">내 정보</div>'));
-        const chk = ui.el('<label class="row check-row"><input type="checkbox"' + (st.useBmr ? ' checked' : '') + '/><span class="row-label" style="flex:1">기초대사량 반영<small>성별·나이·키에 따라 개인별로 계산</small></span></label>');
+        const chk = ui.el('<label class="row check-row"><input type="checkbox"' + (st.useBmr ? ' checked' : '') + '/><span class="row-label" style="flex:1">기초대사량 반영<small>운동 중 기초대사 소모 포함 · 성별·나이·키 반영</small></span></label>');
         const sexRow = ui.segRow({ label: '성별', options: [{ value: 'm', label: '남성' }, { value: 'f', label: '여성' }], value: st.sex, onChange: v => { st.sex = v; st.save(); onChange(); } });
         const ageRow = ui.numberRow({ label: '나이', unit: '세', value: st.age, decimals: 0, maxDigits: 3, onChange: v => { st.age = v; st.save(); onChange(); } });
         const hRow = ui.numberRow({ label: '키', unit: 'cm', value: st.height, decimals: 1, maxDigits: 3, onChange: v => { st.height = v; st.save(); onChange(); } });
@@ -164,8 +165,9 @@
           if (st.useBmr && !(B > 0) ) { res.innerHTML = card('기초대사량 계산을 위해 나이와 키를 입력하세요'); return; }
           const pm = a => perMinFor(a.met, st);
           const bmrLine = st.useBmr
-            ? '<div class="result-sub" style="margin-top:10px">내 기초대사량 하루 ' + F.fmt(Math.round(B), 0) + 'kcal (시간당 약 ' + F.fmt(B / 24, 0) + 'kcal) · 기초대사 소모분 제외</div>'
-            : '<div class="result-sub" style="margin-top:10px">체중만 반영한 일반 공식 · 기초대사량 미반영</div>';
+            ? '<div class="result-sub" style="margin-top:10px">내 기초대사량 하루 ' + F.fmt(Math.round(B), 0) + 'kcal (시간당 약 ' + F.fmt(B / 24, 0) + 'kcal) · 운동 중 기초대사 소모 포함</div>'
+            : '<div class="result-sub" style="margin-top:10px">기초대사량 미반영 · 운동만으로 태우는 칼로리 (체중 기준)</div>';
+          const note = '<p class="est-note">운동 소모량은 표준 운동 강도(MET)와 ' + (st.useBmr ? '기초대사량 추정 공식' : '체중') + '으로 계산한 추정치이며, 음식 칼로리는 일반적인 1인분 평균값입니다. 실제 값은 운동 강도, 근육량, 제품·조리법에 따라 달라집니다.</p>';
           if (st.mode === 'burn') {
             const k = F.parseNum(st.kcal);
             if (!(k > 0)) { res.innerHTML = card('칼로리를 입력하세요'); return; }
@@ -180,7 +182,7 @@
               bmrLine + '</div>' +
               '<div class="section-title">운동별 필요 시간</div><div class="group">' +
               ACTS.map(a => '<div class="row act-row"><span class="row-label"><span class="act-emoji">' + a.e + '</span><span>' + a.n + '<small class="li-sub" style="display:block;margin-top:1px">' + a.d + '</small></span></span>' +
-                '<span class="act-val"><b>' + dur(k / pm(a)) + '</b><small>' + F.fmt(pm(a), 1) + 'kcal/분</small></span></div>').join('') + '</div>';
+                '<span class="act-val"><b>' + dur(k / pm(a)) + '</b><small>' + F.fmt(pm(a), 1) + 'kcal/분</small></span></div>').join('') + '</div>' + note;
           } else {
             const a = ACTS.find(x => x.id === st.act) || ACTS[0];
             const m = F.parseNum(st.min);
@@ -191,7 +193,7 @@
               '<div class="result-main">' + F.fmt(Math.round(k), 0) + '<span class="u">kcal</span></div>' +
               '<div class="result-sub">분당 약 ' + F.fmt(pm(a), 1) + 'kcal · MET ' + a.met + (a.spm ? ' · 약 ' + F.fmt(Math.round(m * a.spm / 100) * 100, 0) + '걸음' : '') + '</div>' +
               bmrLine +
-              ui.resultRows(eq.map(f => ({ label: f.n + ' (' + f.k + 'kcal)', value: F.fmt(k / f.k, 1) + '개 분량' }))) + '</div>';
+              ui.resultRows(eq.map(f => ({ label: f.n + ' (' + f.k + 'kcal)', value: F.fmt(k / f.k, 1) + '개 분량' }))) + '</div>' + note;
           }
         }
         calc();

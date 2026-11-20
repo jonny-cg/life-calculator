@@ -25,6 +25,7 @@
       ]));
       const res = ui.el('<div class="result-card"></div>');
       page.appendChild(res);
+      page.appendChild(ui.el('<p class="est-note">BMI는 키와 몸무게만으로 계산한 지표로 근육량·체형을 반영하지 않습니다. 표준 체중은 BMI 22를 기준으로 한 참고값입니다.</p>'));
       page.appendChild(ui.infoBanner('BMI 판정 기준 보기', info));
 
       function calc() {

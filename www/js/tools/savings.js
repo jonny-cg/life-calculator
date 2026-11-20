@@ -47,6 +47,7 @@
 
       const res = ui.el('<div class="result-card"></div>');
       page.appendChild(res);
+      page.appendChild(ui.el('<p class="est-note">월 단위로 단순 계산한 예상 금액입니다. 실제 이자는 은행의 일할 계산, 우대금리, 중도해지 여부에 따라 달라집니다.</p>'));
 
       function calc() {
         const A = F.parseNum(st.amount), r = F.parseNum(st.rate);

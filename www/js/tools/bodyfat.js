@@ -48,6 +48,7 @@
         }
         res = ui.el('<div class="result-card"></div>');
         box.appendChild(res);
+        box.appendChild(ui.el('<p class="est-note">체지방률은 ' + (st.method === 'simple' ? 'BMI·나이·성별로 추정한' : '둘레 측정 공식으로 추정한') + ' 값으로 정확한 측정값이 아닙니다. 정확한 수치는 체성분 분석기(인바디 등)로 확인하세요.</p>'));
         box.appendChild(ui.infoBanner('체지방률 기준 · 측정 방법 안내', info));
         calc();
       }

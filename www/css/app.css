@@ -661,3 +661,9 @@ a { color: inherit; text-decoration: none; }
 .food-total { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-2); margin-top: 8px; padding: 0 2px; }
 .food-total b { color: var(--text); }
 .chip.add { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+
+.est-note { font-size: 11.5px; line-height: 1.5; color: var(--text-3); margin: 10px 6px 0; }
+.est-note::before { content: "※ "; }
+:root[data-theme="dark"] .est-note { color: rgba(235,235,245,.45); }
+.section-sep { height: 1px; background: var(--sep); margin: 32px 4px 6px; }
+.time-fields.no-sec input { width: 52px; }
