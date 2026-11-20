@@ -7,6 +7,9 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -42,3 +45,27 @@ jobs:
         with:
           name: life-calculator-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # 휴대폰에서 바로 받을 수 있도록 Releases 에도 올림 (저장소 → Releases → test-apk)
+      - name: Publish to Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk LifeCalculator-test.apk
+          gh release delete test-apk --yes --cleanup-tag || true
+          gh release create test-apk LifeCalculator-test.apk \
+            --title "테스트용 APK ($(date -u -d '+9 hours' '+%Y-%m-%d %H:%M') KST)" \
+            --notes "Actions 에서 자동으로 만든 테스트용(debug) APK 입니다. 휴대폰에서 이 파일을 받아 설치하세요." \
+            --prerelease
+
+      # 빌드 결과를 apk 브랜치에도 보관
+      - name: Store on apk branch
+        run: |
+          mkdir /tmp/apkbranch && cp LifeCalculator-test.apk /tmp/apkbranch/
+          cd /tmp/apkbranch
+          git init -q -b apk
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add LifeCalculator-test.apk
+          git commit -qm "test apk ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" apk
