@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>생활 계산기</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon-192.png" type="image/png" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <main id="view" class="view" aria-live="polite"></main>
+
+    <!-- 광고 배너 영역: 웹(윈도우 미리보기)에서는 자리표시자, 앱(APK)에서는 AdMob 배너가 이 위치에 겹쳐 표시됩니다 -->
+    <div id="ad-slot" class="ad-slot" aria-hidden="true"></div>
+
+    <nav id="tabbar" class="tabbar" role="tablist">
+      <a href="#menu" class="tab" data-tab="menu" role="tab">
+        <span class="tab-icon" data-icon="tabTools"></span><span class="tab-label">메뉴</span>
+      </a>
+      <a href="#calc" class="tab" data-tab="calc" role="tab">
+        <span class="tab-icon" data-icon="tabCalc"></span><span class="tab-label">계산기</span>
+      </a>
+      <a href="#settings" class="tab" data-tab="settings" role="tab">
+        <span class="tab-icon" data-icon="tabSettings"></span><span class="tab-label">설정</span>
+      </a>
+    </nav>
+  </div>
+
+  <div id="sheet-root"></div>
+  <div id="toast" class="toast" role="status"></div>
+
+  <!-- 외부 라이브러리 (오프라인 동작을 위해 로컬 포함) -->
+  <script src="js/lib/korean-lunar-calendar.min.js"></script>
+
+  <!-- 앱 공통 -->
+  <script src="js/env.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/formulas.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/ads.js"></script>
+  <script src="js/net.js"></script>
+  <script src="js/menu.js"></script>
+
+  <!-- 화면 -->
+  <script src="js/calculator.js"></script>
+  <script src="js/tools/area.js"></script>
+  <script src="js/tools/length.js"></script>
+  <script src="js/tools/discount.js"></script>
+  <script src="js/tools/dday.js"></script>
+  <script src="js/tools/age.js"></script>
+  <script src="js/tools/lunar.js"></script>
+  <script src="js/tools/loan.js"></script>
+  <script src="js/tools/savings.js"></script>
+  <script src="js/tools/speed.js"></script>
+  <script src="js/tools/bmi.js"></script>
+  <script src="js/tools/bodyfat.js"></script>
+  <script src="js/tools/exchange.js"></script>
+  <script src="js/tools/stock.js"></script>
+  <script src="js/tools/gold.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

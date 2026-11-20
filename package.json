@@ -1,0 +1,22 @@
+{
+  "name": "life-calculator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "생활 계산기 - 기본 계산기와 생활 속 계산 도구 모음",
+  "scripts": {
+    "test": "node tests/formulas.test.js",
+    "android:init": "npx cap add android && node scripts/setup-android.js",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^8.4.2",
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/status-bar": "^8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.2"
+  }
+}

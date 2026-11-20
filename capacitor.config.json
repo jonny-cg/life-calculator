@@ -1,0 +1,18 @@
+{
+  "appId": "com.lifecalc.app",
+  "appName": "생활 계산기",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#F2F2F7"
+  },
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "LIGHT",
+      "backgroundColor": "#F2F2F7"
+    },
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}
