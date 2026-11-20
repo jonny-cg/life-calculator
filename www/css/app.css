@@ -623,3 +623,23 @@ a { color: inherit; text-decoration: none; }
   background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%), linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
   background-position: calc(100% - 13px) 55%, calc(100% - 8px) 55%; background-size: 5px 5px; background-repeat: no-repeat; }
 .cur-select option { color: #000; }
+.chip .chip-unit { font-size: 10.5px; font-weight: 500; opacity: .6; margin-left: 4px; }
+.chip.on .chip-unit { opacity: .85; }
+.time-fields { display: flex; align-items: center; gap: 4px; flex: 1; justify-content: flex-end; }
+.time-fields input { width: 44px; flex: none; border: 0; outline: 0; background: var(--fill); border-radius: 8px; text-align: center; font-size: 17px; font-weight: 600; padding: 6px 2px; font-variant-numeric: tabular-nums; }
+.time-fields span { font-size: 14px; color: var(--text-2); margin-right: 4px; }
+.cur-btn { display: inline-flex; align-items: center; gap: 6px; flex: none; max-width: 58%; background: var(--fill); border-radius: 8px; padding: 6px 10px; font-size: 15px; font-weight: 600; text-align: left; }
+.cur-btn .cn { font-weight: 500; font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cur-btn svg { width: 12px; height: 12px; flex: none; color: var(--text-2); transform: rotate(90deg); }
+.search-box { display: flex; align-items: center; gap: 8px; background: var(--fill); border-radius: 10px; padding: 0 12px; height: 40px; margin-bottom: 14px; }
+.search-box svg { width: 17px; height: 17px; color: var(--text-2); flex: none; }
+.search-box input { flex: 1; border: 0; outline: 0; background: transparent; font-size: 16px; }
+.cur-item .row-label { flex: 1; }
+.cur-item .cc { font-weight: 700; min-width: 44px; display: inline-block; }
+.cur-item small { display: block; font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.cur-item.sel .row-label { color: var(--accent); }
+.act-row .row-label { display: flex; align-items: center; gap: 10px; flex: 1; }
+.act-emoji { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; background: var(--fill); flex: none; }
+.act-val { text-align: right; }
+.act-val b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.act-val small { display: block; font-size: 11.5px; color: var(--text-2); }

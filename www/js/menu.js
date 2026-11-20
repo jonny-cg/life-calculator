@@ -5,6 +5,7 @@
 (function () {
   const F = LC.F, ui = LC.ui;
   const LONG_PRESS_MS = 450;
+  const RECENT_MAX = 5;   // 최근 사용 목록 최대 표시 개수
   let editing = false;
   let exitEditFn = null;
 
@@ -26,7 +27,7 @@
   function pushRecent(id) {
     const r = recentIds().filter(x => x !== id);
     r.unshift(id);
-    LC.store.set('recentTools', r.slice(0, 5));
+    LC.store.set('recentTools', r.slice(0, RECENT_MAX));
   }
 
   function mount(view, go) {
@@ -71,7 +72,7 @@
 
     function drawRecent() {
       recentBox.innerHTML = '';
-      const recent = recentIds().map(id => LC.tools.find(x => x.id === id)).filter(Boolean);
+      const recent = recentIds().map(id => LC.tools.find(x => x.id === id)).filter(Boolean).slice(0, RECENT_MAX);
       if (!recent.length) return;
       const header = ui.el('<div class="section-head"><span>최근 사용</span><button type="button" class="link-btn">전체 삭제</button></div>');
       header.querySelector('button').onclick = async () => {
