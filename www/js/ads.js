@@ -34,9 +34,11 @@
     if (isNative() && AdMob) {
       try {
         await AdMob.initialize({ initializeForTesting: cfg.admob.isTesting });
-        // 실제 배너 높이가 정해지면 웹뷰 레이아웃의 광고 공간도 같이 맞춤
-        AdMob.addListener('bannerAdSizeChanged', info => { if (info && info.height) setHeight(info.height); });
-        setHeight(cfg.bannerHeight);
+        // 광고 공간은 배너가 실제로 표시될 때만 잡음 (로드 전·실패·숨김 시 빈 공간이 생기지 않도록)
+        setHeight(0);
+        AdMob.addListener('bannerAdSizeChanged', info => { if (info && info.height) { bannerH = info.height; syncSlot(); } });
+        AdMob.addListener('bannerAdLoaded', () => { bannerLoaded = true; if (!bannerH) bannerH = cfg.bannerHeight; syncSlot(); });
+        AdMob.addListener('bannerAdFailedToLoad', () => { bannerLoaded = false; syncSlot(); });
         await AdMob.showBanner({
           adId: platform() === 'ios' ? cfg.admob.iosBannerId : cfg.admob.androidBannerId,
           adSize: 'ADAPTIVE_BANNER',
@@ -92,7 +94,9 @@
   /* 배너 잠시 숨기기 — 네이티브 배너는 화면 맨 위 층에 그려지므로
    * 팝업(시트)이 열리거나 키보드가 올라올 때는 숨겼다가 닫히면 다시 보여줍니다. */
   const pauses = new Set();
-  let bannerShown = false, paused = false;
+  let bannerShown = false, paused = false, bannerLoaded = false, bannerH = 0;
+  // 배너가 보이는 동안에만 광고 공간 확보
+  function syncSlot() { setHeight(bannerLoaded && !paused && bannerH ? bannerH : 0); }
   function applyPause() {
     const AdMob = plugin();
     if (!AdMob || !bannerShown) return;
@@ -100,6 +104,7 @@
     if (want === paused) return;
     paused = want;
     try { want ? AdMob.hideBanner() : AdMob.resumeBanner(); } catch (e) {}
+    syncSlot();
   }
   function pause(reason) { pauses.add(reason); applyPause(); }
   function resume(reason) { pauses.delete(reason); setTimeout(applyPause, 150); }

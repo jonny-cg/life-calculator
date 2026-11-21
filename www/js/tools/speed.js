@@ -68,47 +68,96 @@
     id: 'speed', title: '속도 계산기', short: '속도', icon: 'speed', color: ['#C87BFF', '#9B3FD6'],
     info: info,
     render(page) {
-      const st = ui.toolState('speed', { value: 100, unit: 'kmh' });
-      const pst = ui.toolState('dts', { dist: 10, time: { h: 0, m: 55, s: 0 }, kmh: '', order: ['dist', 'time'] });
-      LC.buildConverter(page, { units: F.SPEED_UNITS, state: st });
+      // order: 사용자가 직접 입력한(비어 있지 않은) 칸, 최근 입력 순
+      const pst = ui.toolState('speed3', { dist: '', time: { h: 0, m: 0, s: 0 }, speed: 100, unit: 'kmh', order: ['kmh'] });
+      const U = () => F.SPEED_UNITS.find(u => u.id === pst.unit) || F.SPEED_UNITS[0];
 
-      page.appendChild(ui.el('<div class="section-sep"></div>'));
-      page.appendChild(ui.el('<div class="section-head" style="margin-top:18px"><span style="font-size:20px;font-weight:700;color:var(--text)">거리 · 시간 · 속도</span><button type="button" class="link-btn" data-reset>초기화</button></div>'));
-      page.appendChild(ui.el('<p class="footnote" style="margin:-2px 4px 10px">두 가지를 입력하면 나머지 하나가 <b style="color:var(--accent)">자동 계산</b>됩니다.</p>'));
+      page.appendChild(ui.el('<div class="section-head" style="margin:6px 4px 10px"><span style="font-size:13px">속도만 입력하면 단위 변환, 두 가지를 입력하면 나머지 하나가 <b style="color:var(--accent)">자동 계산</b>돼요</span><button type="button" class="link-btn" data-reset style="flex:none;margin-left:10px">초기화</button></div>'));
 
-      const distRow = ui.numberRow({ label: '거리', unit: 'km', value: pst.dist, decimals: 4, maxDigits: 5, onChange: v => { pst.dist = v; touch('dist'); } });
-      const chips = ui.chips(DIST_CHIPS, v => { pst.dist = v; distRow.input.setNumber(v); touch('dist'); });
-      const timeRow = LC.timeRow('시간', pst, 'time', () => touch('time'), { seconds: false });
-      const speedRow = ui.numberRow({ label: '속도', unit: 'km/h', value: pst.kmh, decimals: 2, maxDigits: 6, onChange: v => { pst.kmh = v; touch('kmh'); } });
-      const g = ui.group([distRow]); g.appendChild(chips); g.appendChild(timeRow); g.appendChild(speedRow);
+      const distRow = ui.numberRow({ label: '거리', unit: 'km', value: pst.dist, placeholder: '-', decimals: 4, maxDigits: 5, onChange: v => { pst.dist = isNaN(v) ? '' : v; touch('dist', !isNaN(v) && v > 0); } });
+      const chips = ui.chips(DIST_CHIPS, v => { pst.dist = v; distRow.input.setNumber(v); touch('dist', true); });
+      const timeRow = LC.timeRow('시간', pst, 'time', () => touch('time', timeRow.seconds() > 0), { seconds: false });
+      const speedRow = ui.numberRow({ label: '속도', value: pst.speed, placeholder: '-', decimals: 4, maxDigits: 7, onChange: v => { pst.speed = isNaN(v) ? '' : v; touch('kmh', !isNaN(v) && v > 0); } });
+      const unitTag = ui.el('<span class="unit"></span>');
+      speedRow.querySelector('.field').appendChild(unitTag);
+      const unitChips = ui.el('<div class="chips" style="padding-top:2px"></div>');
+      F.SPEED_UNITS.forEach(u => {
+        const b = ui.el('<button class="chip" data-u="' + u.id + '">' + ui.esc(u.name) + '<small class="chip-unit">' + ui.esc(u.sym) + '</small></button>');
+        b.onclick = () => {
+          // 단위를 바꾸면 같은 속도를 새 단위로 다시 표시
+          const kmh = curKmh();
+          pst.unit = u.id;
+          if (isFinite(kmh)) { pst.speed = F.fix(kmh / U().f); speedRow.input.setNumber(round(pst.speed)); }
+          pst.save(); syncUnit(); calc();
+        };
+        unitChips.appendChild(b);
+      });
+      const g = ui.group([distRow]); g.appendChild(chips); g.appendChild(timeRow); g.appendChild(speedRow); g.appendChild(unitChips);
       page.appendChild(g);
-      const res = ui.el('<div class="result-card"></div>');
+      const res = ui.el('<div></div>');
       page.appendChild(res);
       page.appendChild(ui.infoBanner('걷기·달리기·KTX 등 속도 참고표', info));
 
       const rows = { dist: distRow, time: timeRow, kmh: speedRow };
       Object.keys(rows).forEach(k => rows[k].querySelector('.row-label').insertAdjacentHTML('beforeend', '<span class="auto-badge">자동</span>'));
+      function round(v) { return Math.abs(v) >= 1 ? Math.round(v * 100) / 100 : Math.round(v * 10000) / 10000; }
+      function curKmh() { const v = F.parseNum(pst.speed); return v > 0 ? v * U().f : NaN; }
+      function syncUnit() {
+        unitTag.textContent = U().sym;
+        unitChips.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.u === pst.unit));
+      }
+      syncUnit();
 
-      // 마지막으로 입력한 두 값으로 나머지 하나를 계산
-      function touch(key) {
-        pst.order = [key].concat(pst.order.filter(k => k !== key)).slice(0, 2);
+      function touch(key, filled) {
+        pst.order = pst.order.filter(k => k !== key);
+        if (filled) pst.order.unshift(key);
         pst.save(); calc();
       }
       page.querySelector('[data-reset]').onclick = () => {
-        pst.dist = ''; pst.kmh = ''; pst.time = { h: 0, m: 0, s: 0 }; pst.order = ['dist', 'time']; pst.save();
+        pst.dist = ''; pst.speed = ''; pst.time = { h: 0, m: 0, s: 0 }; pst.order = []; pst.save();
         distRow.input.setNumber(''); speedRow.input.setNumber(''); timeRow.setSeconds(0); calc();
       };
 
+      function convList(kmh) {
+        return '<div class="section-title">단위 변환 · 눌러서 복사</div><div class="group">' +
+          F.SPEED_UNITS.map(u => {
+            const v = kmh / u.f, txt = F.fmtSig(v, 8);
+            return '<div class="row conv-row tappable' + (u.id === pst.unit ? ' base' : '') + '" data-copy="' + txt.replace(/,/g, '') + '">' +
+              '<span class="row-label">' + u.name + '</span><span class="row-value">' + txt + ' <span class="muted" style="font-weight:500;font-size:14px">' + u.sym + '</span></span></div>';
+          }).join('') + '</div>';
+      }
+      function bindCopy() {
+        res.querySelectorAll('[data-copy]').forEach(r => { r.onclick = () => ui.copy(r.dataset.copy, ''); });
+      }
+
       function calc() {
-        const target = ['dist', 'time', 'kmh'].find(k => !pst.order.includes(k));
+        const recent = pst.order.slice(0, 2);
+        const target = recent.length === 2 ? ['dist', 'time', 'kmh'].find(k => !recent.includes(k)) : null;
         Object.keys(rows).forEach(k => rows[k].classList.toggle('auto', k === target));
-        let d = F.parseNum(pst.dist), sec = timeRow.seconds(), k = F.parseNum(pst.kmh);
-        if (target === 'kmh') { k = d > 0 && sec > 0 ? d / (sec / 3600) : NaN; pst.kmh = isFinite(k) ? F.fix(Math.round(k * 100) / 100) : ''; speedRow.input.setNumber(pst.kmh); }
+        let d = F.parseNum(pst.dist), sec = timeRow.seconds(), k = curKmh();
+        if (target === 'kmh') {
+          k = d > 0 && sec > 0 ? d / (sec / 3600) : NaN;
+          pst.speed = isFinite(k) ? F.fix(round(k / U().f)) : ''; speedRow.input.setNumber(pst.speed);
+        }
         if (target === 'dist') { d = k > 0 && sec > 0 ? k * sec / 3600 : NaN; pst.dist = isFinite(d) ? F.fix(Math.round(d * 1000) / 1000) : ''; distRow.input.setNumber(pst.dist); }
-        if (target === 'time') { sec = d > 0 && k > 0 ? d / k * 3600 : NaN; timeRow.setSeconds(isFinite(sec) ? sec : 0); } // 칸에는 분 단위, 결과에는 초까지
+        if (target === 'time') { sec = d > 0 && k > 0 ? d / k * 3600 : NaN; timeRow.setSeconds(isFinite(sec) ? sec : 0); }
         pst.save();
+
+        const card = t => '<div class="result-card"><div class="result-empty">' + t + '</div></div>';
+        // 속도만 입력 → 단위 변환 정보
+        if (!target) {
+          if (k > 0 && recent.includes('kmh')) {
+            const p = 3600 / k;
+            res.innerHTML = '<div class="result-card"><div class="result-label">' + (pst.unit === 'kmh' ? '입력한 속도' : F.fmt(F.parseNum(pst.speed), 4) + ' ' + U().sym + ' 는') + '</div>' +
+              '<div class="result-main">시속 ' + F.fmtSig(k, 8) + '<span class="u">km/h</span></div>' +
+              '<div class="quote-stats" style="margin-top:14px"><div>1km 이동<b>' + hms(p) + '</b></div><div>100m 이동<b>' + hms(p / 10) + '</b></div><div>1시간 이동<b>' + F.fmt(k, 1) + ' km</b></div></div>' +
+              '<p class="est-note" style="margin:12px 0 0">거리나 시간을 하나 더 입력하면 나머지 값이 자동 계산돼요.</p></div>' + convList(k);
+            bindCopy();
+          } else res.innerHTML = card('속도를 입력하거나, 거리·시간·속도 중 두 가지를 입력하세요');
+          return;
+        }
         if (!(d > 0 && sec > 0 && k > 0)) {
-          res.innerHTML = '<div class="result-empty">' + { kmh: '거리와 시간을', dist: '속도와 시간을', time: '거리와 속도를' }[target] + ' 입력하세요</div>';
+          res.innerHTML = card({ kmh: '거리와 시간을', dist: '속도와 시간을', time: '거리와 속도를' }[target] + ' 입력하세요');
           return;
         }
         const p = sec / d; // 1km 당 초
@@ -117,21 +166,22 @@
           dist: { l: '시속 ' + F.fmt(k, 2) + 'km로 ' + hms(sec) + ' 동안', v: F.fmt(d, 2) + '<span class="u">km</span>' },
           time: { l: '시속 ' + F.fmt(k, 2) + 'km로 ' + F.fmt(d, 3) + 'km 이동', v: hms(sec) }
         }[target];
-        res.innerHTML = '<div class="result-label">' + head.l + '</div>' +
+        res.innerHTML = '<div class="result-card"><div class="result-label">' + head.l + '</div>' +
           '<div class="result-main"' + (target === 'time' ? ' style="font-size:30px"' : '') + '>' + head.v + '</div>' +
           '<div class="quote-stats" style="margin-top:14px">' +
           '<div>1km 페이스<b>' + pace(p) + '</b></div>' +
           '<div>100m<b>' + hms(p / 10) + '</b></div>' +
-          '<div>초속<b>' + F.fmt(k / 3.6, 2) + ' m/s</b></div></div>' +
+          '<div>1시간 이동<b>' + F.fmt(k, 1) + ' km</b></div></div>' +
           '<div class="section-title" style="margin:16px 0 0">같은 속도라면</div>' +
           ui.resultRows([
             { label: '5km', value: hms(p * 5) },
             { label: '10km', value: hms(p * 10) },
             { label: '하프 (21.1km)', value: hms(p * 21.0975) },
-            { label: '풀코스 (42.195km)', value: hms(p * 42.195) },
-            { label: '1시간 동안', value: F.fmt(k, 2) + ' km' }
+            { label: '풀코스 (42.195km)', value: hms(p * 42.195) }
           ]).replace('result-rows', 'result-rows" style="margin-top:4px;border-top:0') +
-          '<p class="est-note">"같은 속도라면" 기록은 처음부터 끝까지 같은 속도를 유지한다고 가정한 예상치입니다. 실제 기록은 체력·코스·날씨에 따라 달라집니다.</p>';
+          '<p class="est-note">"같은 속도라면" 기록은 처음부터 끝까지 같은 속도를 유지한다고 가정한 예상치입니다. 실제 기록은 체력·코스·날씨에 따라 달라집니다.</p></div>' +
+          convList(k);
+        bindCopy();
       }
       calc();
     }
