@@ -42,6 +42,7 @@
   --key-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 
   --bar-bg: rgba(249, 249, 249, 0.86);
+  --bar-solid: #F9F9F9;
   --sheet-bg: #F2F2F7;
   --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.18);
 
@@ -82,6 +83,7 @@
   --key-shadow: none;
 
   --bar-bg: rgba(22, 22, 24, 0.86);
+  --bar-solid: #161618;
   --sheet-bg: #1C1C1E;
   color-scheme: dark;
 }
@@ -133,7 +135,7 @@ a { color: inherit; text-decoration: none; }
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  padding-top: var(--safe-t);
+  background: var(--bg);
 }
 .view::-webkit-scrollbar { width: 0; }
 
@@ -199,7 +201,7 @@ a { color: inherit; text-decoration: none; }
   position: sticky; top: 0; z-index: 5;
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
   height: 48px; margin: 0 -16px; padding: 0 8px;
-  background: var(--bar-bg);
+  background: var(--bar-solid);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 0.5px solid transparent;
@@ -532,8 +534,8 @@ a { color: inherit; text-decoration: none; }
 .history-expr { font-size: 14px; color: var(--text-2); word-break: break-all; }
 .history-res { font-size: 22px; font-weight: 500; margin-top: 2px; font-variant-numeric: tabular-nums; word-break: break-all; }
 
-.color-pick { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; margin-left: auto; }
-.color-pick button { width: 24px; height: 24px; border-radius: 50%; background: var(--c); position: relative; }
+.color-pick { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-left: auto; }
+.color-pick button { width: 22px; height: 22px; border-radius: 50%; background: var(--c); position: relative; }
 .color-pick button.on::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--c); }
 
 /* 변환 결과 리스트 */
@@ -667,3 +669,20 @@ a { color: inherit; text-decoration: none; }
 :root[data-theme="dark"] .est-note { color: rgba(235,235,245,.45); }
 .section-sep { height: 1px; background: var(--sep); margin: 32px 4px 6px; }
 .time-fields.no-sec input { width: 52px; }
+
+/* 상단 상태표시줄 영역: 스크롤 내용이 비치지 않도록 앱 프레임에서 여백 처리 */
+.app { padding-top: var(--safe-t); }
+:root[data-page="tool"] .app { background: var(--bar-solid); }
+.menu-page { padding-top: 16px; }
+.edit-bar { position: sticky; bottom: 12px; z-index: 6; margin-top: 16px; }
+.edit-bar .btn { box-shadow: 0 8px 24px -6px rgba(0,122,255,.55); }
+.edit-bar .btn svg { width: 20px; height: 20px; }
+/* D-Day 아이콘 */
+.dd-icon { width: 38px; height: 38px; border-radius: 11px; flex: none; display: flex; align-items: center; justify-content: center; }
+.dd-icon svg { width: 21px; height: 21px; }
+.icon-pick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px 6px; padding: 12px 10px 14px; }
+.icon-pick button { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11.5px; color: var(--text-2); }
+.icon-pick button span:first-child { width: 44px; height: 44px; border-radius: 13px; display: flex; align-items: center; justify-content: center; background: var(--fill); color: var(--text-2); transition: background .15s, color .15s; }
+.icon-pick button svg { width: 22px; height: 22px; }
+.icon-pick button.on { color: var(--text); font-weight: 600; }
+.icon-pick button.on span:first-child { background: var(--c); color: #fff; }

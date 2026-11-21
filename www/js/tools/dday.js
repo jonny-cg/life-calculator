@@ -3,6 +3,16 @@
   const F = LC.F, ui = LC.ui;
   const db = LC.store.collection('dday');
   const COLORS = ['#FF3B30', '#FF9500', '#34C759', '#007AFF', '#5856D6', '#AF52DE', '#FF2D55', '#8E8E93'];
+  // 목록에 표시할 아이콘
+  const ICONS = [
+    { id: 'dday', n: '일정' }, { id: 'age', n: '생일' }, { id: 'heart', n: '기념일' }, { id: 'gift', n: '이벤트' }, { id: 'flag', n: '행사' },
+    { id: 'plane', n: '여행' }, { id: 'star', n: '중요' }, { id: 'book', n: '시험·공부' }, { id: 'work', n: '업무' }, { id: 'health', n: '병원·건강' }
+  ];
+  function iconBox(item, size) {
+    const ic = ICONS.some(i => i.id === item.icon) ? item.icon : 'dday';
+    const s = size || 38;
+    return '<span class="dd-icon" style="width:' + s + 'px;height:' + s + 'px;background:' + item.color + '22;color:' + item.color + '">' + LC.icon(ic, { sw: 2 }) + '</span>';
+  }
 
   function todayStr() { return F.ymdStr(F.todayYMD()); }
   function dotDate(s) { const d = F.parseYMD(s); return d ? d.y + '.' + String(d.m).padStart(2, '0') + '.' + String(d.d).padStart(2, '0') + ' (' + F.weekday(d) + ')' : ''; }
@@ -12,8 +22,8 @@
     if (LC.store.get('dday.seeded', false)) return;
     LC.store.set('dday.seeded', true);
     const t = F.todayYMD();
-    db.add({ title: t.y + '년 새해부터', date: t.y + '-01-01', includeStart: true, repeat: 'none', color: '#007AFF' });
-    db.add({ title: '크리스마스', date: t.y + '-12-25', includeStart: true, repeat: 'none', color: '#34C759' });
+    db.add({ title: t.y + '년 새해부터', date: t.y + '-01-01', includeStart: true, repeat: 'none', color: '#007AFF', icon: 'star' });
+    db.add({ title: '크리스마스', date: t.y + '-12-25', includeStart: true, repeat: 'none', color: '#34C759', icon: 'gift' });
   }
 
   function describe(item) {
@@ -27,7 +37,7 @@
   /* ---------- 편집 시트 ---------- */
   function editSheet(item, onDone) {
     const isNew = !item;
-    const d = Object.assign({ title: '', date: todayStr(), includeStart: true, repeat: 'none', color: COLORS[3] }, item || {});
+    const d = Object.assign({ title: '', date: todayStr(), includeStart: true, repeat: 'none', color: COLORS[3], icon: 'dday' }, item || {});
     const wrap = ui.el('<div></div>');
     const titleRow = ui.el('<div class="row"><input class="text-input" maxlength="30" placeholder="제목 (예: 우리 만난 날, 시험일)"/></div>');
     titleRow.querySelector('input').value = d.title;
@@ -36,15 +46,28 @@
     const repeatRow = ui.segRow({ label: '방식', options: [{ value: 'none', label: '며칠째 · D-Day' }, { value: 'yearly', label: '매년 반복' }], value: d.repeat, onChange: v => { d.repeat = v; sync(); } });
     const incRow = ui.switchRow({ label: '지정일을 1일로 계산', sub: '기념일(100일 등)은 보통 켜 둡니다', value: d.includeStart !== false, onChange: v => { d.includeStart = v; } });
     const colorRow = ui.el('<div class="row"><span class="row-label">색상</span><div class="color-pick"></div></div>');
+    // 아이콘 선택
+    const iconPick = ui.el('<div class="icon-pick"></div>');
+    ICONS.forEach(ic => {
+      const b = ui.el('<button type="button" data-ic="' + ic.id + '"><span>' + LC.icon(ic.id, { sw: 2 }) + '</span><span>' + ic.n + '</span></button>');
+      b.onclick = () => { d.icon = ic.id; syncIcon(); };
+      iconPick.appendChild(b);
+    });
+    function syncIcon() {
+      iconPick.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.ic === d.icon); b.style.setProperty('--c', d.color); });
+    }
+    syncIcon();
     COLORS.forEach(c => {
       const b = ui.el('<button type="button" style="--c:' + c + '" aria-label="색상"></button>');
-      b.onclick = () => { d.color = c; colorRow.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); };
+      b.onclick = () => { d.color = c; colorRow.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); syncIcon(); };
       if (c === d.color) b.classList.add('on');
       colorRow.querySelector('.color-pick').appendChild(b);
     });
     wrap.appendChild(ui.group([titleRow]));
     wrap.appendChild(ui.group([dateRow, repeatRow, incRow]));
-    wrap.appendChild(ui.group([colorRow]));
+    wrap.appendChild(ui.el('<div class="section-title" style="margin-top:20px">아이콘 · 색상</div>'));
+    const ig = ui.group([colorRow]); ig.insertBefore(iconPick, ig.firstChild);
+    wrap.appendChild(ig);
     const help = ui.el('<p class="footnote"></p>');
     wrap.appendChild(help);
     function sync() {
@@ -86,6 +109,7 @@
     const wrap = ui.el('<div></div>');
     wrap.innerHTML =
       '<div class="result-card" style="margin-top:4px;text-align:center">' +
+      '<div style="display:flex;justify-content:center;margin-bottom:8px">' + iconBox(item, 48) + '</div>' +
       '<div class="result-label">' + ui.esc(item.title) + '</div>' +
       '<div class="result-main" style="font-size:44px;color:' + item.color + '">' + desc.big + '</div>' +
       '<div class="result-sub">' + desc.small + '</div>' +
@@ -213,7 +237,7 @@
           items.forEach(it => {
             const ds = describe(it);
             const sub = it.repeat === 'yearly' ? '매년 ' + +it.date.slice(5, 7) + '월 ' + +it.date.slice(8, 10) + '일' : dotDate(it.date);
-            const li = ui.el('<div class="list-item"><span class="li-dot" style="background:' + it.color + '"></span>' +
+            const li = ui.el('<div class="list-item">' + iconBox(it) +
               '<div class="li-main"><div class="li-title">' + ui.esc(it.title) + '</div><div class="li-sub">' + sub + '</div></div>' +
               '<div class="li-right"><div class="li-big" style="color:' + it.color + '">' + ds.big + '</div><div class="li-small">' + ds.small + '</div></div></div>');
             li.onclick = () => detailSheet(it, drawList);

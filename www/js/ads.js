@@ -18,9 +18,12 @@
   function setHeight(px) {
     document.documentElement.style.setProperty('--ad-h', px + 'px');
   }
-  function tabbarHeight() {
-    const t = document.getElementById('tabbar');
-    return t ? Math.round(t.getBoundingClientRect().height) : 56;
+  // 배너를 탭바 바로 위에 붙이기 위한 아래 여백(dp)
+  // AdMob 플러그인이 하단 시스템 영역(내비게이션 바) 높이를 스스로 더하므로,
+  // 탭바 높이에서 그 영역(safe-area-inset-bottom)을 뺀 순수 탭바 높이만 넘깁니다.
+  function bannerMargin() {
+    const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabbar-h'));
+    return Math.round(v || 56);
   }
 
   async function init() {
@@ -38,9 +41,11 @@
           adId: platform() === 'ios' ? cfg.admob.iosBannerId : cfg.admob.androidBannerId,
           adSize: 'ADAPTIVE_BANNER',
           position: 'BOTTOM_CENTER',
-          margin: tabbarHeight(),   // 탭바 바로 위에 배치
+          margin: bannerMargin(),   // 탭바 바로 위에 배치
           isTesting: cfg.admob.isTesting
         });
+        bannerShown = true;
+        if (pauses.size) applyPause();
         prepareInterstitial();
       } catch (e) {
         console.warn('[ads] AdMob 초기화 실패', e);
@@ -84,6 +89,30 @@
     }
   }
 
+  /* 배너 잠시 숨기기 — 네이티브 배너는 화면 맨 위 층에 그려지므로
+   * 팝업(시트)이 열리거나 키보드가 올라올 때는 숨겼다가 닫히면 다시 보여줍니다. */
+  const pauses = new Set();
+  let bannerShown = false, paused = false;
+  function applyPause() {
+    const AdMob = plugin();
+    if (!AdMob || !bannerShown) return;
+    const want = pauses.size > 0;
+    if (want === paused) return;
+    paused = want;
+    try { want ? AdMob.hideBanner() : AdMob.resumeBanner(); } catch (e) {}
+  }
+  function pause(reason) { pauses.add(reason); applyPause(); }
+  function resume(reason) { pauses.delete(reason); setTimeout(applyPause, 150); }
+
+  // 입력칸에 포커스 → 키보드가 올라오므로 배너 숨김
+  document.addEventListener('focusin', e => {
+    if (e.target.matches && e.target.matches('input:not([type=checkbox]):not([type=date]), textarea')) pause('keyboard');
+  });
+  document.addEventListener('focusout', () => setTimeout(() => {
+    const a = document.activeElement;
+    if (!a || !a.matches || !a.matches('input, textarea')) resume('keyboard');
+  }, 100));
+
   // 향후 '광고 제거' 인앱 결제 연동 시 사용
   async function removeAds() {
     LC.store.set('ads.removed', true);
@@ -93,5 +122,5 @@
     document.getElementById('ad-slot').innerHTML = '';
   }
 
-  LC.ads = { init, onToolOpen, removeAds, isNative };
+  LC.ads = { init, onToolOpen, removeAds, isNative, pause, resume };
 })();

@@ -33,10 +33,9 @@
   function mount(view, go) {
     editing = false;
     const page = ui.el('<div class="page menu-page"></div>');
-    const head = ui.el('<div class="title-row"><h1 class="large-title">메뉴</h1>' +
-      '<button class="btn small edit-done hidden" type="button">완료</button></div>');
-    page.appendChild(head);
-    const doneBtn = head.querySelector('.edit-done');
+    // 편집 완료 버튼은 화면 아래쪽에 고정 (손가락이 닿기 쉬운 위치)
+    const doneBar = ui.el('<div class="edit-bar hidden"><button class="btn edit-done" type="button">' + LC.icon('check', { sw: 2.6 }) + ' 완료</button></div>');
+    const doneBtn = doneBar.querySelector('.edit-done');
 
     // 오늘 날짜 카드 (양력 + 음력)
     const t = F.todayYMD();
@@ -61,6 +60,7 @@
       grid.appendChild(item);
     });
     page.appendChild(grid);
+    page.appendChild(doneBar);
     if (!LC.store.get('menu.hintShown', false)) {
       page.appendChild(ui.el('<p class="footnote" data-first-hint>아이콘을 길게 누르면 메뉴 순서를 바꿀 수 있어요.</p>'));
     }
@@ -104,7 +104,7 @@
       if (editing) return;
       editing = true;
       page.classList.add('editing');
-      doneBtn.classList.remove('hidden');
+      doneBar.classList.remove('hidden');
       hint.classList.remove('hidden');
       const fh = page.querySelector('[data-first-hint]');
       if (fh) fh.remove();
@@ -115,7 +115,7 @@
       if (!editing) return;
       editing = false;
       page.classList.remove('editing');
-      doneBtn.classList.add('hidden');
+      doneBar.classList.add('hidden');
       hint.classList.add('hidden');
       saveOrder([...grid.children].map(c => c.dataset.id));
     }
@@ -129,7 +129,7 @@
       saveOrder(def);
     };
     view.addEventListener('click', e => {
-      if (editing && !e.target.closest('.tool-grid') && !e.target.closest('.edit-hint') && !e.target.closest('.edit-done')) exitEdit();
+      if (editing && !e.target.closest('.tool-grid') && !e.target.closest('.edit-hint') && !e.target.closest('.edit-bar')) exitEdit();
     });
 
     /* ---------- 드래그 ---------- */

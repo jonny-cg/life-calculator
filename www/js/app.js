@@ -37,6 +37,8 @@
     view.onscroll = null;
     view.scrollTop = 0;
     const tab = name === 'tool' ? HOME : name;
+    // 상단 상태표시줄 영역 색을 화면에 맞춤 (도구 화면은 상단바 색)
+    document.documentElement.setAttribute('data-page', name === 'tool' ? 'tool' : 'main');
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     if (name === 'tool') mountTool(arg);
     else if (name === 'calc') LC.calculator.mount(view);

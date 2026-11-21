@@ -51,6 +51,8 @@
     else if (opts.content) body.appendChild(opts.content);
     root.appendChild(back);
     requestAnimationFrame(() => requestAnimationFrame(() => back.classList.add('open')));
+    const sheetId = 'sheet' + Math.random().toString(36).slice(2);
+    if (LC.ads && LC.ads.pause) LC.ads.pause(sheetId);
 
     const api = {
       el: back, body: body,
@@ -59,6 +61,7 @@
         if (i >= 0) openSheets.splice(i, 1);
         back.classList.remove('open');
         setTimeout(() => back.remove(), 380);
+        if (LC.ads && LC.ads.resume) LC.ads.resume(sheetId);
         if (opts.onClose) opts.onClose();
       }
     };
