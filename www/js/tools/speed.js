@@ -6,8 +6,8 @@
     ['자전거', 20], ['시내 주행', 50], ['고속도로', 100], ['KTX', 300], ['여객기 순항', 900], ['음속 (마하 1)', F.MACH_KMH]
   ];
   const DIST_CHIPS = [
-    { label: '1km', value: 1 }, { label: '3km', value: 3 }, { label: '5km', value: 5 }, { label: '10km', value: 10 },
-    { label: '하프 21.1km', value: 21.0975 }, { label: '풀코스 42.195km', value: 42.195 }, { label: '100km', value: 100 }
+    { label: '1km', value: 1 }, { label: '5km', value: 5 }, { label: '10km', value: 10 },
+    { label: '하프', value: 21.0975 }, { label: '풀코스', value: 42.195 }
   ];
 
   function info() {
@@ -72,7 +72,7 @@
       const pst = ui.toolState('speed3', { dist: '', time: { h: 0, m: 0, s: 0 }, speed: 100, unit: 'kmh', order: ['kmh'] });
       const U = () => F.SPEED_UNITS.find(u => u.id === pst.unit) || F.SPEED_UNITS[0];
 
-      page.appendChild(ui.el('<div class="section-head" style="margin:6px 4px 10px"><span style="font-size:13px">속도만 입력하면 단위 변환, 두 가지를 입력하면 나머지 하나가 <b style="color:var(--accent)">자동 계산</b>돼요</span><button type="button" class="link-btn" data-reset style="flex:none;margin-left:10px">초기화</button></div>'));
+      page.appendChild(ui.el('<div class="section-head" style="margin:15px 4px 6px"><span style="font-size:13px">속도만 입력하면 단위 변환, 두 가지를 입력하면 나머지 하나가 <b style="color:var(--accent)">자동 계산</b>돼요</span><button type="button" class="link-btn" data-reset style="flex:none;margin-left:10px">초기화</button></div>'));
 
       const distRow = ui.numberRow({ label: '', unit: 'km', value: pst.dist, placeholder: '-', decimals: 4, maxDigits: 5, onChange: v => { pst.dist = isNaN(v) ? '' : v; touch('dist', !isNaN(v) && v > 0); } });
       const chips = ui.chips(DIST_CHIPS, v => { pst.dist = v; distRow.input.setNumber(v); touch('dist', true); });
@@ -80,7 +80,7 @@
       const speedRow = ui.numberRow({ label: '', value: pst.speed, placeholder: '-', decimals: 4, maxDigits: 7, onChange: v => { pst.speed = isNaN(v) ? '' : v; touch('kmh', !isNaN(v) && v > 0); } });
       const unitTag = ui.el('<span class="unit"></span>');
       speedRow.querySelector('.field').appendChild(unitTag);
-      const unitChips = ui.el('<div class="chips" style="padding-top:2px"></div>');
+      const unitChips = ui.el('<div class="chips one-line" style="padding-top:2px"></div>');
       F.SPEED_UNITS.forEach(u => {
         const b = ui.el('<button class="chip" data-u="' + u.id + '">' + ui.esc(u.name) + '<small class="chip-unit">' + ui.esc(u.sym) + '</small></button>');
         b.onclick = () => {

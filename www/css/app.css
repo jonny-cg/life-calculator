@@ -208,6 +208,8 @@ a { color: inherit; text-decoration: none; }
   transition: border-color .2s;
 }
 .navbar + * { margin-top: 8px; }
+/* 탭 버튼(세그먼트)이 없는 서브 페이지는 상단바와 15px 띄움 */
+.navbar + *:not(.seg) { margin-top: 15px; }
 .navbar.scrolled { border-bottom-color: var(--sep); }
 .navbar-title { font-size: 17px; font-weight: 600; text-align: center; white-space: nowrap; }
 .nav-btn {
@@ -728,3 +730,16 @@ a { color: inherit; text-decoration: none; }
 .wx-temp { flex: none; font-size: 14px; font-variant-numeric: tabular-nums; text-align: right; }
 .wx-temp b { font-weight: 600; }
 .wx-hum { width: 52px; flex: none; text-align: right; font-size: 12.5px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+/* 속도: 카드 높이 줄이기 */
+.dts-block { margin-top: 10px; }
+.group.dts-block + .group.dts-block { margin-top: 10px; }
+.dts-head { padding: 10px 14px 0; }
+.dts-block .row { min-height: 44px; padding-top: 4px; padding-bottom: 4px; }
+.dts-block .field input { font-size: 22px; padding: 2px 0; }
+.dts-block .time-fields input { font-size: 18px; width: 58px; padding: 6px 2px; }
+.dts-block .chips { gap: 6px; padding: 0 14px 10px; }
+.dts-block .chip { height: 26px; padding: 0 10px; font-size: 12.5px; border-radius: 13px; }
+.chips.one-line { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.chips.one-line::-webkit-scrollbar { display: none; }
+.chips.one-line .chip { flex: none; }
