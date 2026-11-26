@@ -68,12 +68,13 @@
   ];
   const cur = c => CUR.find(x => x.c === c) || { c: c, n: c.toUpperCase(), s: '' };
   function prevDate(s) { const d = F.parseYMD(s); return F.ymdStr(F.fromDayNum(F.dayNum(d.y, d.m, d.d) - 1)); }
-  function digitsFor(v) { return Math.abs(v) >= 100 ? 2 : Math.abs(v) >= 1 ? 4 : 6; }
+  function digitsFor(v) { return Math.abs(v) >= 1 ? 2 : 4; }
 
   LC.registerTool({
     id: 'exchange', title: '환율 계산기', short: '환율', icon: 'exchange', color: ['#30D5C8', '#0E9F94'], refreshable: true,
     render(page) {
-      const st = ui.toolState('exchange', { from: 'usd', to: 'krw', amount: 100 });
+      // 기본: 위쪽 원화, 아래쪽 미국 달러. edited = 마지막으로 입력한 칸('from' 위 / 'to' 아래)
+      const st = ui.toolState('exchange2', { from: 'krw', to: 'usd', amount: 10000, toAmount: '', edited: 'from' });
       let data = null, prev = null;
 
       const status = ui.el('<div class="status-line"><span>시세 불러오는 중…</span></div>');
@@ -85,11 +86,14 @@
         '<div class="field"><input type="text" aria-label="금액"/></div></div><div class="field-hint" data-from-name></div></div>');
       const swap = ui.el('<button type="button" class="swap-btn" aria-label="통화 바꾸기">' + LC.icon('swap', { sw: 2 }) + '</button>');
       const g2 = ui.el('<div class="group"><div class="row"><button type="button" class="cur-btn" data-to aria-label="받을 통화 선택"></button>' +
-        '<div class="row-value strong" data-result style="font-size:22px;font-weight:700;color:var(--text)">-</div></div><div class="field-hint" data-to-name></div></div>');
+        '<div class="field"><span class="unit" data-to-sym></span><input type="text" aria-label="받을 금액"/></div></div><div class="field-hint" data-to-name></div></div>');
       conv.append(g1, swap, g2);
       page.appendChild(conv);
       const amountInput = g1.querySelector('input');
-      ui.bindNumber(amountInput, { decimals: 4, maxDigits: 15, value: st.amount, onChange: v => { st.amount = v; st.save(); calc(); } });
+      ui.bindNumber(amountInput, { decimals: 4, maxDigits: 15, value: st.amount, onChange: v => { st.amount = v; st.edited = 'from'; st.save(); calc(); } });
+      const toInput = g2.querySelector('input');
+      ui.bindNumber(toInput, { decimals: 4, maxDigits: 15, value: st.toAmount, onChange: v => { st.toAmount = v; st.edited = 'to'; st.save(); calc(); } });
+      [amountInput, toInput].forEach(i => { i.style.fontSize = '22px'; i.style.fontWeight = '700'; });
       const btnFrom = g1.querySelector('[data-from]'), btnTo = g2.querySelector('[data-to]');
       function syncBtns() {
         [[btnFrom, st.from], [btnTo, st.to]].forEach(([b, c]) => {
@@ -99,7 +103,14 @@
       btnFrom.onclick = () => pickCurrency('보낼 통화 선택', st.from, c => { st.from = c; st.save(); syncBtns(); calc(); });
       btnTo.onclick = () => pickCurrency('받을 통화 선택', st.to, c => { st.to = c; st.save(); syncBtns(); calc(); });
       syncBtns();
-      swap.onclick = () => { const t = st.from; st.from = st.to; st.to = t; st.save(); syncBtns(); calc(); };
+      swap.onclick = () => {
+        const t = st.from; st.from = st.to; st.to = t;
+        const a = st.amount; st.amount = st.toAmount; st.toAmount = a;
+        st.edited = st.edited === 'to' ? 'from' : 'to';
+        amountInput.setNumber(st.amount === '' ? '' : String(F.fix(+st.amount)));
+        toInput.setNumber(st.toAmount === '' ? '' : String(F.fix(+st.toAmount)));
+        st.save(); syncBtns(); calc();
+      };
 
       // 통화 · 국가 검색 시트
       function pickCurrency(title, current, onPick) {
@@ -138,14 +149,14 @@
         render();
         if (window.matchMedia && matchMedia('(pointer:fine)').matches) setTimeout(() => input.focus(), 350);
       }
-      const chips = ui.chips([1, 10, 100, 1000, 10000, 100000].map(v => ({ label: F.fmt(v, 0), value: v })), v => { st.amount = v; st.save(); amountInput.setNumber(v); calc(); });
+      const chips = ui.chips([1, 10, 100, 1000, 10000, 100000].map(v => ({ label: F.fmt(v, 0), value: v })), v => { st.amount = v; st.edited = 'from'; st.save(); amountInput.setNumber(v); calc(); });
       chips.style.padding = '12px 4px 0';
       page.appendChild(chips);
 
       const listTitle = ui.el('<div class="section-head"><span>주요 통화 · 원화 기준 (전일 대비)</span><button type="button" class="link-btn">국가 검색</button></div>');
       listTitle.querySelector('button').onclick = () => pickCurrency('국가 · 통화 검색', st.from, c => {
         const u = cur(c).u || 1;
-        st.from = c; st.to = 'krw'; st.amount = u; st.save(); syncBtns(); amountInput.setNumber(u); calc();
+        st.from = c; st.to = 'krw'; st.amount = u; st.edited = 'from'; st.save(); syncBtns(); amountInput.setNumber(u); calc();
         document.getElementById('view').scrollTo({ top: 0, behavior: 'smooth' });
       });
       const list = ui.el('<div class="group"></div>');
@@ -158,14 +169,21 @@
       function calc() {
         g1.querySelector('[data-from-name]').textContent = cur(st.from).n;
         g2.querySelector('[data-to-name]').textContent = cur(st.to).n;
-        const out = g2.querySelector('[data-result]');
-        if (!data) { out.textContent = '-'; return; }
-        const a = F.parseNum(st.amount);
-        if (!(a >= 0) || !rate(st.from) || !rate(st.to)) { out.textContent = '-'; return; }
-        const v = a * rate(st.to) / rate(st.from);
-        out.innerHTML = cur(st.to).s ? '<span class="muted" style="font-size:16px;font-weight:500;margin-right:4px">' + cur(st.to).s + '</span>' + F.fmt(v, st.to === 'krw' ? 0 : digitsFor(v)) : F.fmt(v, digitsFor(v));
-        out.title = '눌러서 복사';
-        out.onclick = () => ui.copy(String(F.fix(v)), '');
+        g2.querySelector('[data-to-sym]').textContent = cur(st.to).s;
+        if (!data || !rate(st.from) || !rate(st.to)) return;
+        // 입력한 쪽을 기준으로 반대쪽 금액 계산 (위↔아래 양방향)
+        const r = rate(st.to) / rate(st.from);
+        const out = (v, code) => { const d = code === 'krw' ? 0 : digitsFor(v); return String(Math.round(v * Math.pow(10, d)) / Math.pow(10, d)); };
+        if (st.edited === 'to') {
+          const b = F.parseNum(st.toAmount);
+          if (!(b >= 0)) { amountInput.value = ''; return; }
+          st.amount = b / r; amountInput.setNumber(out(st.amount, st.from));
+        } else {
+          const a = F.parseNum(st.amount);
+          if (!(a >= 0)) { toInput.value = ''; return; }
+          st.toAmount = a * r; toInput.setNumber(out(st.toAmount, st.to));
+        }
+        st.save();
       }
 
       function drawList() {
@@ -185,7 +203,7 @@
             '<span class="fx-val"><b>' + F.fmt(v, 2) + '원</b>' + chg + '</span></div>');
           r.onclick = () => {
             st.from = x.c; st.to = 'krw'; st.amount = u; st.save();
-            syncBtns(); amountInput.setNumber(u); calc();
+            st.edited = 'from'; syncBtns(); amountInput.setNumber(u); calc();
             document.getElementById('view').scrollTo({ top: 0, behavior: 'smooth' });
           };
           list.appendChild(r);

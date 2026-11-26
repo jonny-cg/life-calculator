@@ -50,6 +50,9 @@
 
     page.appendChild(ui.el('<div class="section-title">데이터 (이 기기에만 저장됩니다)</div>'));
     page.appendChild(ui.group([
+      iconRow('tabTools', '#007AFF', '메뉴 순서 초기화', chev, async () => {
+        if (await ui.confirm('메뉴 순서를 처음 상태로 되돌릴까요?', '초기화')) { LC.store.remove('toolOrder'); ui.toast('메뉴 순서를 초기화했어요'); }
+      }),
       iconRow('history', '#8E8E93', '계산 기록 삭제', chev, async () => {
         if (await ui.confirm('계산기 기록을 모두 삭제할까요?', '삭제', true)) { LC.store.collection('history').clear(); ui.toast('삭제했어요'); }
       }),
@@ -68,7 +71,7 @@
     ]));
 
     page.appendChild(ui.el(
-      '<div class="app-hero"><div class="tool-icon" style="background:linear-gradient(160deg,#FFB340,#FF8A00)">' + LC.icon('tabCalc', { sw: 1.8 }) + '</div>' +
+      '<div class="app-hero"><img class="app-hero-icon" src="icons/icon-192.png" alt=""/>' +
       '<div style="font-weight:600">' + LC.config.appName + '</div><div class="footnote" style="margin-top:4px">계산 결과는 참고용이며, 금융·건강 관련 결정은 전문가와 상의하세요.</div></div>'));
     view.appendChild(page);
   }

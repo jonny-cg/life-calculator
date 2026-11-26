@@ -74,10 +74,10 @@
 
       page.appendChild(ui.el('<div class="section-head" style="margin:6px 4px 10px"><span style="font-size:13px">속도만 입력하면 단위 변환, 두 가지를 입력하면 나머지 하나가 <b style="color:var(--accent)">자동 계산</b>돼요</span><button type="button" class="link-btn" data-reset style="flex:none;margin-left:10px">초기화</button></div>'));
 
-      const distRow = ui.numberRow({ label: '거리', unit: 'km', value: pst.dist, placeholder: '-', decimals: 4, maxDigits: 5, onChange: v => { pst.dist = isNaN(v) ? '' : v; touch('dist', !isNaN(v) && v > 0); } });
+      const distRow = ui.numberRow({ label: '', unit: 'km', value: pst.dist, placeholder: '-', decimals: 4, maxDigits: 5, onChange: v => { pst.dist = isNaN(v) ? '' : v; touch('dist', !isNaN(v) && v > 0); } });
       const chips = ui.chips(DIST_CHIPS, v => { pst.dist = v; distRow.input.setNumber(v); touch('dist', true); });
-      const timeRow = LC.timeRow('시간', pst, 'time', () => touch('time', timeRow.seconds() > 0), { seconds: false });
-      const speedRow = ui.numberRow({ label: '속도', value: pst.speed, placeholder: '-', decimals: 4, maxDigits: 7, onChange: v => { pst.speed = isNaN(v) ? '' : v; touch('kmh', !isNaN(v) && v > 0); } });
+      const timeRow = LC.timeRow('', pst, 'time', () => touch('time', timeRow.seconds() > 0), { seconds: false });
+      const speedRow = ui.numberRow({ label: '', value: pst.speed, placeholder: '-', decimals: 4, maxDigits: 7, onChange: v => { pst.speed = isNaN(v) ? '' : v; touch('kmh', !isNaN(v) && v > 0); } });
       const unitTag = ui.el('<span class="unit"></span>');
       speedRow.querySelector('.field').appendChild(unitTag);
       const unitChips = ui.el('<div class="chips" style="padding-top:2px"></div>');
@@ -92,14 +92,24 @@
         };
         unitChips.appendChild(b);
       });
-      const g = ui.group([distRow]); g.appendChild(chips); g.appendChild(timeRow); g.appendChild(speedRow); g.appendChild(unitChips);
-      page.appendChild(g);
+      // 거리 · 시간 · 속도를 각각 구분된 카드로 표시
+      function block(icon, title, sub, color, children) {
+        const b = ui.el('<div class="group dts-block" style="--bc:' + color + '"><div class="dts-head"><span class="dts-ic">' + LC.icon(icon, { sw: 2.1 }) + '</span>' +
+          '<span class="dts-title">' + title + '</span><span class="dts-sub">' + sub + '</span><span class="auto-badge">자동 계산</span></div></div>');
+        children.forEach(c => b.appendChild(c));
+        page.appendChild(b);
+        return b;
+      }
+      const blocks = {
+        dist: block('length', '거리', 'km', '#0A84FF', [distRow, chips]),
+        time: block('clock', '시간', '시간 · 분', '#FF9500', [timeRow]),
+        kmh: block('speed', '속도', '단위 선택', '#AF52DE', [speedRow, unitChips])
+      };
       const res = ui.el('<div></div>');
       page.appendChild(res);
       page.appendChild(ui.infoBanner('걷기·달리기·KTX 등 속도 참고표', info));
 
-      const rows = { dist: distRow, time: timeRow, kmh: speedRow };
-      Object.keys(rows).forEach(k => rows[k].querySelector('.row-label').insertAdjacentHTML('beforeend', '<span class="auto-badge">자동</span>'));
+
       function round(v) { return Math.abs(v) >= 1 ? Math.round(v * 100) / 100 : Math.round(v * 10000) / 10000; }
       function curKmh() { const v = F.parseNum(pst.speed); return v > 0 ? v * U().f : NaN; }
       function syncUnit() {
@@ -133,7 +143,7 @@
       function calc() {
         const recent = pst.order.slice(0, 2);
         const target = recent.length === 2 ? ['dist', 'time', 'kmh'].find(k => !recent.includes(k)) : null;
-        Object.keys(rows).forEach(k => rows[k].classList.toggle('auto', k === target));
+        Object.keys(blocks).forEach(k => blocks[k].classList.toggle('auto', k === target));
         let d = F.parseNum(pst.dist), sec = timeRow.seconds(), k = curKmh();
         if (target === 'kmh') {
           k = d > 0 && sec > 0 ? d / (sec / 3600) : NaN;

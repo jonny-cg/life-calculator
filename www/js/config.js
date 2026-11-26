@@ -5,11 +5,12 @@ window.LC = window.LC || {};
 
 LC.config = {
   appName: '생활 계산기',
-  version: '1.0.0',
+  version: '1.1.0',
 
   ads: {
     // 광고 전체 사용 여부 (false 로 바꾸면 광고 영역이 완전히 사라집니다)
-    enabled: true,
+    // ※ 현재는 '광고 없는 버전'입니다. 광고를 다시 넣는 방법은 ADS.md 참고
+    enabled: false,
 
     // 웹(윈도우 미리보기)에서 광고 자리표시자를 보여줄지 여부
     showPlaceholderOnWeb: true,

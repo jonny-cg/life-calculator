@@ -14,17 +14,23 @@
   LC.registerTool({
     id: 'gold', title: '금값 시세', short: '금값', icon: 'gold', color: ['#F7CE46', '#D69A0B'], refreshable: true,
     render(page) {
-      const st = ui.toolState('gold', { vat: false, weight: 1, unit: 'don', purity: '24' });
+      // basis: 대표 시세 기준 ('g' = 1g, 'don' = 1돈) — 기본 1g
+      const st = ui.toolState('gold2', { vat: false, weight: 1, unit: 'g', purity: '24', basis: 'g' });
+      const BASIS = () => st.basis === 'don' ? DON : 1;
+      const basisName = () => st.basis === 'don' ? '순금 1돈 (3.75g)' : '순금 1g';
       let data = null, prev = null;
 
       const status = ui.el('<div class="status-line"><span>시세 불러오는 중…</span></div>');
       page.appendChild(status);
       const main = ui.el('<div class="quote-card">' +
-        '<div class="quote-top"><span class="quote-name">순금 1돈 (3.75g)</span><span class="quote-time" data-vat-label></span></div>' +
+        '<div class="quote-top"><span class="quote-name" data-basis-name></span><span class="quote-time" data-vat-label></span></div>' +
         '<div class="quote-price" data-price><span class="skeleton">000,000원</span></div>' +
         '<div class="quote-change" data-change><span class="skeleton">+0,000 (+0.00%)</span></div>' +
         '<div data-chart style="min-height:110px"></div></div>');
       page.appendChild(main);
+      const basisSeg = ui.segmented([{ value: 'g', label: '1g 기준' }, { value: 'don', label: '1돈 기준' }], st.basis, v => { st.basis = v; st.save(); draw(); if (data) loadChart(); });
+      basisSeg.style.marginTop = '10px';
+      page.appendChild(basisSeg);
 
       const vatRow = ui.switchRow({ label: '부가세 10% 포함', sub: '금을 살 때 가격에 가깝게 표시', value: st.vat, onChange: v => { st.vat = v; st.save(); draw(); } });
       page.appendChild(ui.el('<div class="mt16"></div>'));
@@ -56,19 +62,20 @@
 
       function draw() {
         main.querySelector('[data-vat-label]').textContent = st.vat ? '부가세 포함' : '부가세 별도';
+        main.querySelector('[data-basis-name]').textContent = basisName();
         if (!data) return;
         const g = krwPerGram(data, 'xau') * vat();
-        const don = g * DON;
+        const don = g * BASIS();   // 대표 시세 (1g 또는 1돈)
         main.querySelector('[data-price]').textContent = F.fmt(Math.round(don), 0) + '원';
         if (prev && prev.rates.xau) {
-          const p = krwPerGram(prev, 'xau') * vat() * DON, d = don - p, pct = d / p * 100;
+          const p = krwPerGram(prev, 'xau') * vat() * BASIS(), d = don - p, pct = d / p * 100;
           const cls = d > 0 ? 'up' : d < 0 ? 'down' : '';
           main.querySelector('[data-change]').innerHTML = '<span class="' + cls + '">' + (d > 0 ? '▲ ' : d < 0 ? '▼ ' : '') + F.fmt(Math.abs(Math.round(d)), 0) + '원 (' + (pct > 0 ? '+' : '') + F.fmt(pct, 2, 2) + '%)</span> <span class="muted" style="font-size:13px;font-weight:500">전일 대비</span>';
         } else main.querySelector('[data-change]').innerHTML = '<span class="muted" style="font-size:13px">기준일 ' + data.date + '</span>';
 
         table.innerHTML =
           row('1g', F.won(g)) +
-          row('1돈', F.won(don), '3.75g') +
+          row('1돈', F.won(g * DON), '3.75g') +
           row('1냥', F.won(g * 37.5), '10돈 · 37.5g') +
           row('1온스', F.won(g * OZ), '31.1g') +
           row('1kg', F.won(g * 1000)) +
@@ -99,9 +106,9 @@
         const box = main.querySelector('[data-chart]');
         box.innerHTML = '<div class="skeleton" style="height:90px;margin-top:12px"></div>';
         const dates = [30, 25, 20, 15, 10, 5, 1].map(d => shift(data.date, -d));
-        const pts = (await Promise.all(dates.map(d => LC.market.fxOn(d).then(r => ({ t: Date.parse(d), v: krwPerGram(r, 'xau') * DON }), () => null))))
+        const pts = (await Promise.all(dates.map(d => LC.market.fxOn(d).then(r => ({ t: Date.parse(d), v: krwPerGram(r, 'xau') * BASIS() }), () => null))))
           .filter(Boolean);
-        pts.push({ t: Date.parse(data.date), v: krwPerGram(data, 'xau') * DON });
+        pts.push({ t: Date.parse(data.date), v: krwPerGram(data, 'xau') * BASIS() });
         if (pts.length < 3) { box.innerHTML = ''; return; }
         const up = pts[pts.length - 1].v >= pts[0].v;
         const ret = (pts[pts.length - 1].v - pts[0].v) / pts[0].v * 100;

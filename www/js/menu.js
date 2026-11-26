@@ -10,16 +10,29 @@
   let exitEditFn = null;
 
   /* ---------- 순서 ---------- */
+  // 기본 메뉴 순서 (4개씩 한 줄)
+  const DEFAULT_ORDER = [
+    'area', 'length', 'speed', 'dday',
+    'discount', 'exchange', 'age', 'lunar',
+    'savings', 'loan', 'bodyfat', 'bmi',
+    'calorie', 'gold', 'stock'
+  ];
+  function defaultIds() {
+    const ids = DEFAULT_ORDER.filter(id => LC.tools.some(t => t.id === id));
+    LC.tools.forEach(t => { if (!ids.includes(t.id)) ids.push(t.id); });
+    return ids;
+  }
   function orderedTools() {
-    const saved = LC.store.get('toolOrder', []);
+    const saved = LC.store.get('toolOrder', null) || defaultIds();
     const list = saved.map(id => LC.tools.find(t => t.id === id)).filter(Boolean);
     LC.tools.forEach(t => { if (!list.includes(t)) list.push(t); }); // 새로 추가된 메뉴는 뒤에
     return list;
   }
   function saveOrder(ids) { LC.store.set('toolOrder', ids); }
 
+  // 메뉴 아이콘 이미지 (www/icons/menu/<id>.png)
   function iconHTML(t, small) {
-    return '<div class="tool-icon' + (small ? ' small' : '') + '" style="background:linear-gradient(160deg,' + t.color[0] + ',' + t.color[1] + ')">' + LC.icon(t.icon, { sw: 2 }) + '</div>';
+    return '<div class="tool-icon img' + (small ? ' small' : '') + '"><img src="icons/menu/' + t.id + '.png" alt="" draggable="false"/></div>';
   }
 
   /* ---------- 최근 사용 ---------- */
@@ -40,7 +53,7 @@
     // 오늘 날짜 카드 (양력 + 음력)
     const t = F.todayYMD();
     const l = LC.lunar && LC.lunar.solarToLunar(t.y, t.m, t.d);
-    const today = ui.el('<div class="today-card"><div class="today-moon">' + LC.icon('lunar', { sw: 2 }) + '</div><div>' +
+    const today = ui.el('<div class="today-card"><div class="today-moon"><img src="icons/menu/today.png" alt="" draggable="false"/></div><div>' +
       '<div class="today-date">' + t.m + '월 ' + t.d + '일 ' + F.WEEK[t.w] + '요일</div>' +
       '<div class="today-sub">' + (l ? '음력 ' + (l.intercalation ? '윤' : '') + l.month + '월 ' + l.day + '일 · ' + l.gapja.year : '') + '</div></div></div>');
     today.style.cursor = 'pointer';
@@ -61,9 +74,20 @@
     });
     page.appendChild(grid);
     page.appendChild(doneBar);
-    if (!LC.store.get('menu.hintShown', false)) {
-      page.appendChild(ui.el('<p class="footnote" data-first-hint>아이콘을 길게 누르면 메뉴 순서를 바꿀 수 있어요.</p>'));
-    }
+    // 안내 + 순서 초기화
+    const foot = ui.el('<div class="section-head" style="margin:10px 6px 0;font-size:12.5px"><span>아이콘을 길게 누르면 순서를 바꿀 수 있어요</span>' +
+      '<button type="button" class="link-btn" style="font-size:13px">순서 초기화</button></div>');
+    foot.querySelector('button').onclick = async e => {
+      e.stopPropagation();
+      if (await ui.confirm('메뉴 순서를 처음 상태로 되돌릴까요?', '초기화')) {
+        LC.store.remove('toolOrder');
+        const rects = snapshot();
+        defaultIds().forEach(id => grid.appendChild(grid.querySelector('[data-id="' + id + '"]')));
+        animateFrom(rects);
+        ui.toast('메뉴 순서를 초기화했어요');
+      }
+    };
+    page.appendChild(foot);
 
     const recentBox = ui.el('<div></div>');
     page.appendChild(recentBox);
@@ -106,8 +130,6 @@
       page.classList.add('editing');
       doneBar.classList.remove('hidden');
       hint.classList.remove('hidden');
-      const fh = page.querySelector('[data-first-hint]');
-      if (fh) fh.remove();
       LC.store.set('menu.hintShown', true);
       if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
     }
@@ -122,7 +144,7 @@
     exitEditFn = () => { if (editing) { exitEdit(); return true; } return false; };
     doneBtn.onclick = exitEdit;
     hint.querySelector('[data-reset]').onclick = () => {
-      const def = LC.tools.map(x => x.id);
+      const def = defaultIds();
       const rects = snapshot();
       def.forEach(id => grid.appendChild(grid.querySelector('[data-id="' + id + '"]')));
       animateFrom(rects);
@@ -256,7 +278,7 @@
   }
 
   LC.menu = {
-    mount, orderedTools, pushRecent,
+    mount, orderedTools, pushRecent, defaultIds,
     handleBack() { return exitEditFn ? exitEditFn() : false; }
   };
 })();

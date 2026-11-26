@@ -15,8 +15,10 @@ if (!fs.existsSync(manifest)) {
   process.exit(1);
 }
 
+// 광고 플러그인(@capacitor-community/admob)이 설치된 경우에만 AdMob 앱 ID 등록
+const adsInstalled = fs.existsSync(path.join(__dirname, '..', 'node_modules', '@capacitor-community', 'admob'));
 let m = fs.readFileSync(manifest, 'utf8');
-if (!m.includes('com.google.android.gms.ads.APPLICATION_ID')) {
+if (adsInstalled && !m.includes('com.google.android.gms.ads.APPLICATION_ID')) {
   m = m.replace(/<application([^>]*)>/, match =>
     match + '\n        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="@string/admob_app_id" />');
   fs.writeFileSync(manifest, m);
@@ -24,13 +26,17 @@ if (!m.includes('com.google.android.gms.ads.APPLICATION_ID')) {
 }
 
 let s = fs.readFileSync(strings, 'utf8');
-if (s.includes('name="admob_app_id"')) {
+if (!adsInstalled) {
+  console.log('· 광고 없는 버전: AdMob 설정 건너뜀');
+} else if (s.includes('name="admob_app_id"')) {
   s = s.replace(/<string name="admob_app_id">[^<]*<\/string>/, `<string name="admob_app_id">${ADMOB_APP_ID}</string>`);
 } else {
   s = s.replace('</resources>', `    <string name="admob_app_id">${ADMOB_APP_ID}</string>\n</resources>`);
 }
-fs.writeFileSync(strings, s);
-console.log('✔ strings.xml admob_app_id =', ADMOB_APP_ID);
+if (adsInstalled) {
+  fs.writeFileSync(strings, s);
+  console.log('✔ strings.xml admob_app_id =', ADMOB_APP_ID);
+}
 
 // 앱 아이콘 교체 (resources/android/*.png → mipmap 폴더)
 const iconSrc = path.join(__dirname, '..', 'resources', 'android');
@@ -39,10 +45,19 @@ const iconSrc = path.join(__dirname, '..', 'resources', 'android');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.copyFileSync(path.join(iconSrc, 'ic_launcher-' + d + '.png'), path.join(dir, 'ic_launcher.png'));
   fs.copyFileSync(path.join(iconSrc, 'ic_launcher_round-' + d + '.png'), path.join(dir, 'ic_launcher_round.png'));
-  const fg = path.join(dir, 'ic_launcher_foreground.png');
-  if (fs.existsSync(fg)) fs.unlinkSync(fg);
+  // 적응형 아이콘(Android 8+) 레이어
+  fs.copyFileSync(path.join(iconSrc, 'ic_launcher_foreground-' + d + '.png'), path.join(dir, 'ic_launcher_foreground.png'));
+  fs.copyFileSync(path.join(iconSrc, 'ic_launcher_background-' + d + '.png'), path.join(dir, 'ic_launcher_background.png'));
 });
-// 적응형 아이콘 설정 제거 (위 PNG 아이콘이 그대로 쓰이도록)
 const anydpi = path.join(base, 'res', 'mipmap-anydpi-v26');
-if (fs.existsSync(anydpi)) fs.rmSync(anydpi, { recursive: true, force: true });
-console.log('✔ 앱 아이콘 적용');
+fs.mkdirSync(anydpi, { recursive: true });
+const adaptive = '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n' +
+  '    <background android:drawable="@mipmap/ic_launcher_background" />\n    <foreground android:drawable="@mipmap/ic_launcher_foreground" />\n</adaptive-icon>\n';
+fs.writeFileSync(path.join(anydpi, 'ic_launcher.xml'), adaptive);
+fs.writeFileSync(path.join(anydpi, 'ic_launcher_round.xml'), adaptive);
+// 기존 템플릿의 drawable 전경(벡터) 제거 — mipmap 전경과 이름이 겹치지 않게
+['drawable-v24', 'drawable'].forEach(dd => {
+  const f = path.join(base, 'res', dd, 'ic_launcher_foreground.xml');
+  if (fs.existsSync(f)) fs.unlinkSync(f);
+});
+console.log('✔ 앱 아이콘 적용 (적응형 아이콘 포함)');
