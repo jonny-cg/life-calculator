@@ -40,6 +40,8 @@ var allowedHosts = []string{
 	"cdn.jsdelivr.net",
 	".currency-api.pages.dev",
 	"api.frankfurter.dev",
+	"api.open-meteo.com",
+	"archive-api.open-meteo.com",
 }
 
 var lastPing atomic.Int64

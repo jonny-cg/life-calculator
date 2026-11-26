@@ -15,7 +15,7 @@
     'area', 'length', 'speed', 'dday',
     'discount', 'exchange', 'age', 'lunar',
     'savings', 'loan', 'bodyfat', 'bmi',
-    'calorie', 'gold', 'stock'
+    'calorie', 'pastweather', 'gold', 'stock'
   ];
   function defaultIds() {
     const ids = DEFAULT_ORDER.filter(id => LC.tools.some(t => t.id === id));

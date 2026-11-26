@@ -33,6 +33,7 @@
         '<div class="group">' +
         '<div class="row" style="display:block;padding:14px 16px"><b>Pretendard</b><div class="li-sub">SIL Open Font License 1.1 · © Kil Hyung-jin</div></div>' +
         '<div class="row" style="display:block;padding:14px 16px"><b>시세 데이터</b><div class="li-sub">환율·금 시세: fawazahmed0/exchange-api (CC0, 호출 제한 없음, 일 1회 갱신), Frankfurter · 지수: 네이버 증권 (비공식, 지연 시세)</div></div>' +
+        '<div class="row" style="display:block;padding:14px 16px"><b>날씨 데이터</b><div class="li-sub">Open-Meteo.com — CC BY 4.0 (예보 · ERA5 재분석 과거 자료)</div></div>' +
         '<div class="row" style="display:block;padding:14px 16px"><b>korean-lunar-calendar</b><div class="li-sub">MIT License · © usingsky — 한국천문연구원(KASI) 기준 음양력 데이터</div></div>' +
         '</div>'
     });

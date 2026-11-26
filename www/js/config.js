@@ -5,7 +5,7 @@ window.LC = window.LC || {};
 
 LC.config = {
   appName: '생활 계산기',
-  version: '1.1.0',
+  version: '1.2.0',
 
   ads: {
     // 광고 전체 사용 여부 (false 로 바꾸면 광고 영역이 완전히 사라집니다)

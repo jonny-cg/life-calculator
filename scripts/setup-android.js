@@ -15,6 +15,16 @@ if (!fs.existsSync(manifest)) {
   process.exit(1);
 }
 
+// 위치 권한 (이전 날씨 메뉴의 '현재 위치' 기능)
+{
+  let mf = fs.readFileSync(manifest, 'utf8');
+  ['android.permission.ACCESS_COARSE_LOCATION', 'android.permission.ACCESS_FINE_LOCATION'].forEach(p => {
+    if (!mf.includes(p)) mf = mf.replace('</manifest>', '    <uses-permission android:name="' + p + '" />\n</manifest>');
+  });
+  fs.writeFileSync(manifest, mf);
+  console.log('✔ 위치 권한 추가');
+}
+
 // 광고 플러그인(@capacitor-community/admob)이 설치된 경우에만 AdMob 앱 ID 등록
 const adsInstalled = fs.existsSync(path.join(__dirname, '..', 'node_modules', '@capacitor-community', 'admob'));
 let m = fs.readFileSync(manifest, 'utf8');

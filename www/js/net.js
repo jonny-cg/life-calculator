@@ -144,6 +144,45 @@
       () => naverHistory(code, RANGE_DAYS[range] || 22), force);
   }
 
+  /* ---------- 날씨 (Open-Meteo, 무료·인증키 불필요) ----------
+   * 예보(최근 3일 + 앞으로 3일): api.open-meteo.com/v1/forecast
+   * 과거(재분석 ERA5):          archive-api.open-meteo.com/v1/archive
+   * 무료 이용 조건: 비상업적 이용, IP(기기)당 하루 10,000회 · 시간당 5,000회 · 분당 600회
+   */
+  const WX_VARS = ['weather_code', 'temperature_2m_max', 'temperature_2m_min', 'relative_humidity_2m_mean', 'precipitation_sum'];
+  function wxNorm(j) {
+    const d = j && j.daily;
+    if (!d || !d.time) throw new Error('bad');
+    return d.time.map((t, i) => ({
+      date: t,
+      code: d.weather_code ? d.weather_code[i] : null,
+      max: d.temperature_2m_max ? d.temperature_2m_max[i] : null,
+      min: d.temperature_2m_min ? d.temperature_2m_min[i] : null,
+      hum: d.relative_humidity_2m_mean ? d.relative_humidity_2m_mean[i] : null,
+      rain: d.precipitation_sum ? d.precipitation_sum[i] : null
+    }));
+  }
+  // 습도 항목을 지원하지 않는 경우를 대비해 한 번 더 시도
+  async function wxGet(base, params) {
+    const q = p => base + '?' + params + '&timezone=Asia%2FSeoul&daily=' + p.join(',');
+    try { return wxNorm(await getJSON(q(WX_VARS), { timeout: 15000 })); }
+    catch (e) { return wxNorm(await getJSON(q(WX_VARS.filter(v => v !== 'relative_humidity_2m_mean')), { timeout: 15000 })); }
+  }
+  const ll = (lat, lon) => 'latitude=' + lat.toFixed(3) + '&longitude=' + lon.toFixed(3);
+  async function weatherRecent(lat, lon, force) {
+    return cached('wx.f.' + lat.toFixed(2) + ',' + lon.toFixed(2), 30 * 60 * 1000, async () => ({
+      days: await wxGet('https://api.open-meteo.com/v1/forecast', ll(lat, lon) + '&past_days=3&forecast_days=4')
+    }), force);
+  }
+  async function weatherArchive(lat, lon, start, end) {
+    const key = 'wx.a.' + lat.toFixed(2) + ',' + lon.toFixed(2) + '.' + start + '.' + end;
+    store.removePrefix('cache.wx.a.', 'cache.' + key); // 과거 자료는 최근 조회 1건만 보관 (저장공간 절약)
+    return cached(key, 7 * 864e5, async () => ({
+      days: await wxGet('https://archive-api.open-meteo.com/v1/archive', ll(lat, lon) + '&start_date=' + start + '&end_date=' + end)
+    }));
+  }
+  LC.weather = { recent: weatherRecent, archive: weatherArchive };
+
   LC.net = { getJSON, cached };
   LC.market = { fxLatest, fxOn, indexQuote, indexChart };
 

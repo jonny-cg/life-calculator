@@ -28,6 +28,11 @@
       try { if (ls) ls.removeItem(PREFIX + key); } catch (e) {}
       delete memory[key];
     },
+    // 특정 접두어로 시작하는 저장값 모두 삭제 (keep 은 남김)
+    removePrefix(prefix, keep) {
+      if (ls) Object.keys(ls).filter(k => k.startsWith(PREFIX + prefix) && k !== PREFIX + keep).forEach(k => ls.removeItem(k));
+      Object.keys(memory).filter(k => k.startsWith(prefix) && k !== keep).forEach(k => delete memory[k]);
+    },
     clearAll() {
       if (ls) Object.keys(ls).filter(k => k.startsWith(PREFIX)).forEach(k => ls.removeItem(k));
       Object.keys(memory).forEach(k => delete memory[k]);

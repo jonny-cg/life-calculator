@@ -21,12 +21,14 @@
 - `www/js/tools/*.js` 메뉴 1개 = 파일 1개. `LC.registerTool({ id, title, short, ... render(page) })`
 - `www/icons/menu/<id>.png` 메뉴 아이콘 이미지 (id 와 파일명이 같아야 함), `today.png` 상단 날짜 아이콘
 - `www/js/menu.js` 메뉴 화면 · 기본 순서(`DEFAULT_ORDER`) · 길게 눌러 순서 변경 · 최근 사용(최대 5개)
-- `www/js/net.js` 시세 API (환율·금: fawazahmed0 exchange-api → pages.dev 미러 → Frankfurter / 지수: 네이버 증권)
+- `www/js/net.js` 시세 API (환율·금: fawazahmed0 exchange-api → pages.dev 미러 → Frankfurter / 지수: 네이버 증권) · 날씨 API (Open-Meteo 예보 + ERA5 과거 자료, 기기당 하루 10,000회·비상업적 무료)
+- `www/js/tools/pastweather.js` 이전 날씨, `www/js/data/kr-cities.js` 한국 시 단위 좌표
+- `scripts/make-icons.py` 앱 아이콘 생성 (resources/app-icon-source.png → 웹·안드로이드 아이콘)
 - `www/js/ads.js` 광고 모듈 (현재 꺼짐 — ADS.md)
 - `resources/` 앱 아이콘 원본 및 안드로이드 아이콘(적응형 포함)
 
 ## 메뉴 (기본 순서)
-면적, 길이, 속도, D-Day / 할인, 환율, 나이, 음력 / 예적금, 대출, 체지방, BMI / 칼로리, 금값, 코스피·코스닥
+면적, 길이, 속도, D-Day / 할인, 환율, 나이, 음력 / 예적금, 대출, 체지방, BMI / 칼로리, 이전 날씨, 금값, 코스피·코스닥
 
 ## 빌드
 - 윈도우: `desktop/build.bat` (Go 필요) → `dist/LifeCalculator.exe`
@@ -39,3 +41,6 @@
 - 사용자 저장값 키를 바꾸면(`ui.toolState('이름')`) 기본값이 새로 적용됨 (예: exchange2, gold2, speed3)
 - 네이버 지수 API는 비공식 → 상용 출시 전 공식 데이터 검토 필요
 - 계산 결과가 평균/추정치인 화면에는 `est-note` 안내 문구를 둔다
+
+- Open-Meteo 무료 API는 비상업적 이용 조건 → 광고 넣어 출시하면 유료 구독(상업 라이선스) 또는 기상청 API 검토
+- 메뉴 아이콘은 원본 해상도(270px) 그대로 사용, CSS 필터 금지(흐려짐)

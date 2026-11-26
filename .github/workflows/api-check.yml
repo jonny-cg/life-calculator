@@ -13,7 +13,9 @@ jobs:
             "https://api.frankfurter.dev/v2/rates?base=usd&quotes=krw,jpy,xau" \
             "https://m.stock.naver.com/api/index/KOSPI/basic" \
             "https://m.stock.naver.com/api/index/KOSDAQ/basic" \
-            "https://m.stock.naver.com/api/index/KOSPI/price?pageSize=3&page=1"; do
+            "https://m.stock.naver.com/api/index/KOSPI/price?pageSize=3&page=1" \
+            "https://api.open-meteo.com/v1/forecast?latitude=37.567&longitude=126.978&past_days=3&forecast_days=4&timezone=Asia%2FSeoul&daily=weather_code,temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean,precipitation_sum" \
+            "https://archive-api.open-meteo.com/v1/archive?latitude=37.567&longitude=126.978&start_date=2025-11-23&end_date=2025-11-25&timezone=Asia%2FSeoul&daily=weather_code,temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean,precipitation_sum"; do
             echo "=== $u"
             curl -s -m 20 -A "Mozilla/5.0" -w "\nHTTP %{http_code}\n" "$u" | head -c 1500
             echo

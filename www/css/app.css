@@ -688,9 +688,10 @@ a { color: inherit; text-decoration: none; }
 .icon-pick button.on span:first-child { background: var(--c); color: #fff; }
 
 /* 메뉴 아이콘 이미지 */
-.tool-icon.img { background: none; box-shadow: none; border-radius: 0; }
-.tool-icon.img img { width: 100%; height: 100%; object-fit: contain; display: block; -webkit-user-drag: none; user-select: none; pointer-events: none; filter: drop-shadow(0 3px 5px rgba(0,0,0,.12)); }
-.tool-icon.img.small { width: 32px; height: 32px; }
+/* 메뉴 아이콘: 기존 60px 대비 20% 작게(48px). 선명도를 위해 원본(270px) 그대로 쓰고 CSS 필터(그림자)는 쓰지 않음 */
+.tool-icon.img { background: none; box-shadow: none; border-radius: 0; width: 48px; height: 48px; margin: 6px 0; }
+.tool-icon.img img { width: 100%; height: 100%; object-fit: contain; display: block; -webkit-user-drag: none; user-select: none; pointer-events: none; image-rendering: auto; }
+.tool-icon.img.small { width: 32px; height: 32px; margin: 0; }
 .editing .tool-item .tool-icon.img { animation: wiggle .26s ease-in-out infinite alternate; }
 .drag-ghost .tool-icon.img { box-shadow: none; }
 .drag-ghost .tool-icon.img img { filter: drop-shadow(0 12px 16px rgba(0,0,0,.3)); }
@@ -716,3 +717,14 @@ a { color: inherit; text-decoration: none; }
 .dts-block.auto { background: color-mix(in srgb, var(--bc) 10%, var(--card)); }
 .dts-block.auto .auto-badge { display: inline-block; background: var(--bc); }
 .dts-block.auto input { color: var(--bc); }
+
+/* 이전 날씨 */
+.wx-row { gap: 8px; min-height: 52px; }
+.wx-row.today { background: var(--accent-soft); }
+.wx-date { width: 72px; flex: none; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.wx-date small { display: block; font-size: 11px; color: var(--accent); font-weight: 600; }
+.wx-icon { font-size: 22px; width: 28px; text-align: center; flex: none; }
+.wx-text { flex: 1; font-size: 13px; color: var(--text-2); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wx-temp { flex: none; font-size: 14px; font-variant-numeric: tabular-nums; text-align: right; }
+.wx-temp b { font-weight: 600; }
+.wx-hum { width: 52px; flex: none; text-align: right; font-size: 12.5px; color: var(--text-2); font-variant-numeric: tabular-nums; }
