@@ -251,9 +251,11 @@
   }
 
   // 화면별 입력값 기억 (앱을 다시 열어도 마지막 입력 유지)
-  function toolState(id, defaults) {
+  // resetKeys: 화면에 들어올 때마다 기본값으로 되돌릴 항목 (상단 탭 버튼 등)
+  function toolState(id, defaults, resetKeys) {
     const key = 'state.' + id;
     const state = Object.assign({}, defaults, LC.store.get(key, {}));
+    (resetKeys || []).forEach(k => { state[k] = defaults[k]; });
     state.save = () => {
       const copy = Object.assign({}, state); delete copy.save;
       LC.store.set(key, copy);

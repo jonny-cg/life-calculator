@@ -5,7 +5,7 @@
   LC.registerTool({
     id: 'discount', title: '할인 계산기', short: '할인', icon: 'discount', color: ['#FF5E7E', '#FF2D55'],
     render(page) {
-      const st = ui.toolState('discount', { mode: 'price', price: 50000, rate: 20, extra: '', sale: '' });
+      const st = ui.toolState('discount', { mode: 'price', price: 50000, rate: 20, extra: '', sale: '' }, ['mode']);
       const modeSeg = ui.segmented([
         { value: 'price', label: '할인가 계산' }, { value: 'rate', label: '할인율 계산' }
       ], st.mode, v => { st.mode = v; st.save(); draw(); }, 'wide');

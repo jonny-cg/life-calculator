@@ -10,7 +10,7 @@
   LC.registerTool({
     id: 'savings', title: '예적금 계산기', short: '예적금', icon: 'savings', color: ['#FFB340', '#FF8A00'],
     render(page) {
-      const st = ui.toolState('savings', { type: 'installment', compound: 'simple', amount: 500000, rate: 3.5, period: 12, periodUnit: 'm', tax: 15.4 });
+      const st = ui.toolState('savings', { type: 'installment', compound: 'simple', amount: 500000, rate: 3.5, period: 12, periodUnit: 'm', tax: 15.4 }, ['type']);
 
       page.appendChild(ui.segmented([{ value: 'installment', label: '적금 (매월 납입)' }, { value: 'deposit', label: '예금 (목돈 예치)' }], st.type, v => {
         st.type = v; st.save(); amtLabel(); calc();

@@ -15,7 +15,7 @@
     id: 'gold', title: '금값 시세', short: '금값', icon: 'gold', color: ['#F7CE46', '#D69A0B'], refreshable: true,
     render(page) {
       // basis: 대표 시세 기준 ('g' = 1g, 'don' = 1돈) — 기본 1g
-      const st = ui.toolState('gold2', { vat: false, weight: 1, unit: 'g', purity: '24', basis: 'g' });
+      const st = ui.toolState('gold2', { vat: false, weight: 1, unit: 'g', purity: '24', basis: 'g' }, ['basis']);
       const BASIS = () => st.basis === 'don' ? DON : 1;
       const basisName = () => st.basis === 'don' ? '순금 1돈 (3.75g)' : '순금 1g';
       let data = null, prev = null;

@@ -23,7 +23,7 @@
     id: 'bodyfat', title: '체지방 계산기', short: '체지방', icon: 'bodyfat', color: ['#FF8A65', '#F4511E'],
     info: info,
     render(page) {
-      const st = ui.toolState('bodyfat', { method: 'simple', sex: 'm', age: 35, height: 170, weight: 65, neck: 37, waist: 82, hip: 95 });
+      const st = ui.toolState('bodyfat', { method: 'simple', sex: 'm', age: 35, height: 170, weight: 65, neck: 37, waist: 82, hip: 95 }, ['method']);
       page.appendChild(ui.segmented([{ value: 'simple', label: '간편 추정 (BMI)' }, { value: 'navy', label: '둘레 측정 (정밀)' }], st.method, v => { st.method = v; st.save(); draw(); }, 'wide'));
       const box = ui.el('<div></div>');
       page.appendChild(box);

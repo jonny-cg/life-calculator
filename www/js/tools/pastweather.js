@@ -56,7 +56,7 @@
     info: info,
     render(page) {
       const seoul = LC.KR_CITIES[0];
-      const st = ui.toolState('pastweather', { loc: { name: seoul.name, region: seoul.region, lat: seoul.lat, lon: seoul.lon, gps: false }, tab: 0 });
+      const st = ui.toolState('pastweather', { loc: { name: seoul.name, region: seoul.region, lat: seoul.lat, lon: seoul.lon, gps: false }, tab: 0 }, ['tab']);
       const t = F.todayYMD();
       const todayStr = F.ymdStr(t);
 
@@ -137,7 +137,7 @@
         }
         const recent = rec.status === 'fulfilled' ? rec.value : null;
         const past = arc.status === 'fulfilled' ? arc.value.days : [];
-        status.innerHTML = '<span>' + t.y + '년 ' + t.m + '월 ' + t.d + '일 기준' + (recent && recent.stale ? ' · 저장된 자료' : '') + '</span><span>' + (recent ? LC.ago(recent.cachedAt) + ' 확인' : '') + '</span>';
+        status.innerHTML = '<span>' + t.y + '년 ' + t.m + '월 ' + t.d + '일 기준' + (recent && recent.stale ? ' · <b class="down">인터넷 연결 없음 — 마지막으로 받은 자료</b>' : '') + '</span><span>' + (recent ? LC.ago(recent.cachedAt) + ' 확인' : '') + '</span>';
         draw(recent ? recent.days : [], past);
       }
 

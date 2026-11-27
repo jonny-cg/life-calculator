@@ -20,7 +20,7 @@
   LC.registerTool({
     id: 'stock', title: '코스피 · 코스닥', short: '코스피/코스닥', icon: 'stock', color: ['#48484A', '#1C1C1E'], refreshable: true,
     render(page) {
-      const st = ui.toolState('stock', { range: '1mo' });
+      const st = ui.toolState('stock', { range: '1mo' }, ['range']);
       const status = ui.el('<div class="status-line"><span>시세 불러오는 중…</span></div>');
       page.appendChild(status);
       const seg = ui.segmented(RANGES, st.range, v => { st.range = v; st.save(); IDX.forEach(i => loadChart(i, false)); }, 'wide');

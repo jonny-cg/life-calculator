@@ -45,7 +45,20 @@
     throw lastErr || new Error('no data');
   }
 
+  // 접두어가 같은 저장 자료 중 가장 최근 것
+  function lastCacheWithPrefix(prefix) {
+    let best = null;
+    try {
+      Object.keys(localStorage).filter(k => k.startsWith('lifecalc.' + prefix)).forEach(k => {
+        const v = JSON.parse(localStorage.getItem(k));
+        if (v && (!best || v.t > best.t)) best = v;
+      });
+    } catch (e) {}
+    return best;
+  }
+
   // 캐시: 유효시간 안이면 저장값, 실패 시 오래된 값이라도 반환(stale 표시)
+  // 저장된 값이 전혀 없으면 오류 → 화면에서 값을 표시하지 않음
   async function cached(key, maxAgeMs, loader, force) {
     const c = store.get('cache.' + key, null);
     if (!force && c && Date.now() - c.t < maxAgeMs) return Object.assign({ cachedAt: c.t }, c.data);
@@ -175,11 +188,20 @@
     }), force);
   }
   async function weatherArchive(lat, lon, start, end) {
-    const key = 'wx.a.' + lat.toFixed(2) + ',' + lon.toFixed(2) + '.' + start + '.' + end;
-    store.removePrefix('cache.wx.a.', 'cache.' + key); // 과거 자료는 최근 조회 1건만 보관 (저장공간 절약)
-    return cached(key, 7 * 864e5, async () => ({
-      days: await wxGet('https://archive-api.open-meteo.com/v1/archive', ll(lat, lon) + '&start_date=' + start + '&end_date=' + end)
-    }));
+    const loc = 'wx.a.' + lat.toFixed(2) + ',' + lon.toFixed(2) + '.';
+    const key = loc + start + '.' + end;
+    try {
+      const r = await cached(key, 7 * 864e5, async () => ({
+        days: await wxGet('https://archive-api.open-meteo.com/v1/archive', ll(lat, lon) + '&start_date=' + start + '&end_date=' + end)
+      }));
+      store.removePrefix('cache.wx.a.', 'cache.' + key); // 과거 자료는 최근 조회 1건만 보관 (저장공간 절약)
+      return r;
+    } catch (e) {
+      // 인터넷이 안 될 때: 같은 지역의 마지막으로 받은 과거 자료 사용
+      const old = lastCacheWithPrefix('cache.' + loc);
+      if (old) return Object.assign({ cachedAt: old.t, stale: true }, old.data);
+      throw e;
+    }
   }
   LC.weather = { recent: weatherRecent, archive: weatherArchive };
 

@@ -33,15 +33,16 @@
     id: 'lunar', title: '음력 변환', short: '음력', icon: 'lunar', color: ['#7D7AFF', '#5856D6'],
     render(page) {
       const t = F.todayYMD();
-      const st = ui.toolState('lunar', { mode: 'l2s', ly: t.y, lm: 1, ld: 1, leap: false, solar: '' });
+      const st = ui.toolState('lunar', { mode: 'l2s', ly: t.y, lm: 1, ld: 1, leap: false, solar: '' }, ['mode']);
 
       // 오늘
       const today = solarToLunar(t.y, t.m, t.d);
       page.appendChild(ui.el(
-        '<div class="result-card" style="margin-top:4px">' +
-        '<div class="result-label">오늘 · ' + F.dateLabel(t) + '</div>' +
-        '<div class="result-main" style="font-size:30px">' + (today ? lunarLabel(today).replace('음력 ', '음력 ').replace(/^음력 \d+년 /, '음력 ') : '-') + '</div>' +
-        (today ? '<div class="result-sub">' + today.gapja.year + ' ' + today.gapja.month + ' ' + today.gapja.day + ' · ' + animal(today.gapja) + '</div>' : '') +
+        '<div class="result-card lunar-today">' +
+        '<span class="lt-badge">오늘</span>' +
+        '<div class="lt-solar">양력 ' + F.dateLabel(t) + '</div>' +
+        '<div class="lt-lunar">' + (today ? '음력 ' + (today.intercalation ? '윤' : '') + today.month + '월 ' + today.day + '일' : '-') + '</div>' +
+        (today ? '<div class="lt-ganji">' + today.gapja.year + ' ' + today.gapja.month + ' ' + today.gapja.day + '<span class="lt-animal">' + animal(today.gapja) + '</span></div>' : '') +
         '</div>'));
 
       page.appendChild(ui.el('<div class="mt24"></div>'));
@@ -51,7 +52,7 @@
 
       function draw() {
         box.innerHTML = '';
-        const res = ui.el('<div class="result-card"></div>');
+        const res = ui.el('<div class="result-card lunar-res"></div>');
         if (st.mode === 'l2s') {
           box.appendChild(ui.group([
             ui.numberRow({ label: '음력 연도', unit: '년', value: st.ly, decimals: 0, comma: false, maxDigits: 4, onChange: v => { st.ly = v; st.save(); calc(); } }),

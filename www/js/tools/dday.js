@@ -210,12 +210,14 @@
     id: 'dday', title: '날짜 계산기', short: '날짜·D-Day', icon: 'dday', color: ['#FF6259', '#E5322A'],
     render(page) {
       seed();
-      const st = ui.toolState('dday', { tab: 'list' });
+      const st = ui.toolState('dday', { tab: 'list' }, ['tab']);
       const addBtn = ui.el('<button class="nav-btn icon-only" aria-label="추가">' + LC.icon('plus', { sw: 2.2 }) + '</button>');
       page.nav.querySelector('.nav-right').appendChild(addBtn);
       addBtn.onclick = () => editSheet(null, drawList);
 
-      page.appendChild(ui.segmented([{ value: 'list', label: 'D-Day 목록' }, { value: 'calc', label: '날짜 계산' }], st.tab, v => { st.tab = v; st.save(); show(); }, 'wide'));
+      const tabs = ui.segmented([{ value: 'list', label: 'D-Day 목록' }, { value: 'calc', label: '날짜 계산' }], st.tab, v => { st.tab = v; st.save(); show(); }, 'wide');
+      tabs.style.marginTop = '14px';
+      page.appendChild(tabs);
       const box = ui.el('<div></div>');
       page.appendChild(box);
 

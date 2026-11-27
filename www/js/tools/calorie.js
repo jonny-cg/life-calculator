@@ -70,7 +70,7 @@
     id: 'calorie', title: '칼로리 계산기', short: '칼로리', icon: 'calorie', color: ['#FF9F43', '#EE5A24'],
     info: info,
     render(page) {
-      const st = ui.toolState('calorie', { mode: 'burn', kcal: 500, foods: [], weight: 65, act: 'run', min: 30, useBmr: true, sex: 'm', age: 35, height: 170 });
+      const st = ui.toolState('calorie', { mode: 'burn', kcal: 500, foods: [], weight: 65, act: 'run', min: 30, useBmr: true, sex: 'm', age: 35, height: 170 }, ['mode']);
       if (!Array.isArray(st.foods)) st.foods = [];
       page.appendChild(ui.segmented([{ value: 'burn', label: '칼로리 → 운동 시간' }, { value: 'act', label: '운동 → 소모 칼로리' }], st.mode, v => { st.mode = v; st.save(); draw(); }, 'wide'));
       const box = ui.el('<div></div>');

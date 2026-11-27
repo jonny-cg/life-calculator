@@ -743,3 +743,17 @@ a { color: inherit; text-decoration: none; }
 .chips.one-line { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
 .chips.one-line::-webkit-scrollbar { display: none; }
 .chips.one-line .chip { flex: none; }
+
+.fx-basis { font-size: 11.5px; color: var(--text-2); text-align: right; margin: 6px 6px 0; }
+.kr-amt { color: var(--text-2); font-size: 11.5px; margin-left: 4px; }
+
+/* 음력 화면 상단 오늘 카드 */
+.lunar-today { margin-top: 14px !important; }
+.lt-badge { display: inline-block; font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 2px 8px; }
+.lt-solar { font-size: 18px; font-weight: 600; margin-top: 10px; }
+.lt-lunar { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; }
+.lt-ganji { font-size: 15px; color: var(--text-2); margin-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lt-animal { font-size: 13px; font-weight: 600; color: var(--text); background: var(--fill); border-radius: 6px; padding: 2px 8px; }
+.lunar-res .result-label { font-size: 15px; color: var(--text); font-weight: 500; }
+.lunar-res .result-main { font-size: 26px !important; margin-top: 6px; }
+.lunar-res .result-sub { font-size: 15px; }

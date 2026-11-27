@@ -45,7 +45,7 @@
   LC.registerTool({
     id: 'loan', title: '대출 계산기', short: '대출', icon: 'loan', color: ['#3D9BFF', '#0066E0'],
     render(page) {
-      const st = ui.toolState('loan', { method: 'equal', amount: 100000000, rate: 4.5, period: 30, periodUnit: 'y', grace: 0, graceUnit: 'y' });
+      const st = ui.toolState('loan', { method: 'equal', amount: 100000000, rate: 4.5, period: 30, periodUnit: 'y', grace: 0, graceUnit: 'y' }, ['method']);
 
       page.appendChild(ui.segmented(METHODS, st.method, v => { st.method = v; st.save(); help.textContent = METHOD_HELP[v]; graceRow.classList.toggle('hidden', v === 'bullet'); calc(); }, 'wide'));
       const help = ui.el('<p class="footnote" style="margin:-6px 4px 14px">' + METHOD_HELP[st.method] + '</p>');

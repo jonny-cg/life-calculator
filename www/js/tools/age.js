@@ -27,7 +27,7 @@
     info: info,
     render(page) {
       const t = F.todayYMD();
-      const st = ui.toolState('age', { mode: 'birth', by: 1990, bm: '', bd: '', n: 30, kind: 'man' });
+      const st = ui.toolState('age', { mode: 'birth', by: 1990, bm: '', bd: '', n: 30, kind: 'man' }, ['mode']);
       page.appendChild(ui.segmented([{ value: 'birth', label: '생년월일 → 나이' }, { value: 'age', label: '나이 → 출생연도' }], st.mode, v => { st.mode = v; st.save(); draw(); }, 'wide'));
       const box = ui.el('<div></div>');
       page.appendChild(box);

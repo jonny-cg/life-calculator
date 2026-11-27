@@ -87,12 +87,14 @@
       const swap = ui.el('<button type="button" class="swap-btn" aria-label="통화 바꾸기">' + LC.icon('swap', { sw: 2 }) + '</button>');
       const g2 = ui.el('<div class="group"><div class="row"><button type="button" class="cur-btn" data-to aria-label="받을 통화 선택"></button>' +
         '<div class="field"><span class="unit" data-to-sym></span><input type="text" aria-label="받을 금액"/></div></div><div class="field-hint" data-to-name></div></div>');
-      conv.append(g1, swap, g2);
+      const basisLine = ui.el('<div class="fx-basis"></div>');
+      conv.append(g1, swap, g2, basisLine);
       page.appendChild(conv);
       const amountInput = g1.querySelector('input');
-      ui.bindNumber(amountInput, { decimals: 4, maxDigits: 15, value: st.amount, onChange: v => { st.amount = v; st.edited = 'from'; st.save(); calc(); } });
+      // 계산되는 쪽은 비워 두고 시작 (환율 자료가 있을 때만 채움)
+      ui.bindNumber(amountInput, { decimals: 4, maxDigits: 15, value: st.edited === 'to' ? '' : st.amount, onChange: v => { st.amount = v; st.edited = 'from'; st.save(); calc(); } });
       const toInput = g2.querySelector('input');
-      ui.bindNumber(toInput, { decimals: 4, maxDigits: 15, value: st.toAmount, onChange: v => { st.toAmount = v; st.edited = 'to'; st.save(); calc(); } });
+      ui.bindNumber(toInput, { decimals: 4, maxDigits: 15, value: st.edited === 'to' ? st.toAmount : '', onChange: v => { st.toAmount = v; st.edited = 'to'; st.save(); calc(); } });
       [amountInput, toInput].forEach(i => { i.style.fontSize = '22px'; i.style.fontWeight = '700'; });
       const btnFrom = g1.querySelector('[data-from]'), btnTo = g2.querySelector('[data-to]');
       function syncBtns() {
@@ -166,9 +168,17 @@
       function rate(c) { return c === 'usd' ? 1 : data.rates[c]; }
       function krwPer(c, d) { const r = d || data; return r.rates.krw / (c === 'usd' ? 1 : r.rates[c]); }
 
+      // 통화 이름 + 원화일 때 한글 금액 (예: 13만 3,190원)
+      function hints() {
+        const h = (code, val) => {
+          const n = F.parseNum(val);
+          return ui.esc(cur(code).n) + (code === 'krw' && n >= 1 ? ' <span class="kr-amt">' + F.koreanAmount(Math.round(n)) + '</span>' : '');
+        };
+        g1.querySelector('[data-from-name]').innerHTML = h(st.from, st.amount);
+        g2.querySelector('[data-to-name]').innerHTML = h(st.to, st.toAmount);
+      }
       function calc() {
-        g1.querySelector('[data-from-name]').textContent = cur(st.from).n;
-        g2.querySelector('[data-to-name]').textContent = cur(st.to).n;
+        hints();
         g2.querySelector('[data-to-sym]').textContent = cur(st.to).s;
         if (!data || !rate(st.from) || !rate(st.to)) return;
         // 입력한 쪽을 기준으로 반대쪽 금액 계산 (위↔아래 양방향)
@@ -177,11 +187,11 @@
         if (st.edited === 'to') {
           const b = F.parseNum(st.toAmount);
           if (!(b >= 0)) { amountInput.value = ''; return; }
-          st.amount = b / r; amountInput.setNumber(out(st.amount, st.from));
+          st.amount = b / r; amountInput.setNumber(out(st.amount, st.from)); hints();
         } else {
           const a = F.parseNum(st.amount);
           if (!(a >= 0)) { toInput.value = ''; return; }
-          st.toAmount = a * r; toInput.setNumber(out(st.toAmount, st.to));
+          st.toAmount = a * r; toInput.setNumber(out(st.toAmount, st.to)); hints();
         }
         st.save();
       }
@@ -216,6 +226,7 @@
         if (!data) list.innerHTML = '<div class="row"><span class="skeleton" style="width:100%">loading</span></div>'.repeat(5);
         try {
           data = await LC.market.fxLatest(force);
+          basisLine.innerHTML = data.date + ' 기준 환율 · 하루 1회 갱신' + (data.stale ? ' · <b class="down">인터넷 연결 없음 — 마지막으로 받은 환율</b>' : '');
           status.innerHTML = '<span>기준일 ' + data.date + (data.stale ? ' · <b class="down">오프라인(저장된 시세)</b>' : '') + '</span><span>' + LC.ago(data.cachedAt) + ' 확인</span>';
           calc(); drawList();
           try { prev = await LC.market.fxOn(prevDate(data.date)); drawList(); } catch (e) { /* 전일 데이터 없음 */ }
